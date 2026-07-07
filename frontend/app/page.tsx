@@ -342,10 +342,10 @@ export default function Home() {
           
           {/* Navigation Sidebar */}
           <aside className="w-full lg:w-64 flex-shrink-0">
-            <nav className="space-y-1.5" aria-label="Command sections">
+            <nav className="flex flex-row overflow-x-auto lg:flex-col gap-2 pb-3 lg:pb-0 space-y-0 lg:space-y-1.5" aria-label="Command sections">
               <button
                 onClick={() => setActiveTab("overview")}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition ${
+                className={`flex-shrink-0 flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition ${
                   activeTab === "overview" 
                     ? "bg-blue-600 text-white" 
                     : "text-slate-400 hover:bg-slate-900 hover:text-slate-100"
@@ -356,7 +356,7 @@ export default function Home() {
               </button>
               <button
                 onClick={() => setActiveTab("crowd")}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition ${
+                className={`flex-shrink-0 flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition ${
                   activeTab === "crowd" 
                     ? "bg-blue-600 text-white" 
                     : "text-slate-400 hover:bg-slate-900 hover:text-slate-100"
@@ -367,7 +367,7 @@ export default function Home() {
               </button>
               <button
                 onClick={() => setActiveTab("emergency")}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition ${
+                className={`flex-shrink-0 flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition ${
                   activeTab === "emergency" 
                     ? "bg-blue-600 text-white" 
                     : "text-slate-400 hover:bg-slate-900 hover:text-slate-100"
@@ -378,7 +378,7 @@ export default function Home() {
               </button>
               <button
                 onClick={() => setActiveTab("sustainability")}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition ${
+                className={`flex-shrink-0 flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition ${
                   activeTab === "sustainability" 
                     ? "bg-blue-600 text-white" 
                     : "text-slate-400 hover:bg-slate-900 hover:text-slate-100"
@@ -389,7 +389,7 @@ export default function Home() {
               </button>
               <button
                 onClick={() => setActiveTab("volunteer")}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition ${
+                className={`flex-shrink-0 flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition ${
                   activeTab === "volunteer" 
                     ? "bg-blue-600 text-white" 
                     : "text-slate-400 hover:bg-slate-900 hover:text-slate-100"
@@ -401,7 +401,7 @@ export default function Home() {
             </nav>
             
             {/* Simulation Status Card */}
-            <div className="mt-8 p-4 rounded-2xl glass-panel border-slate-800/80 bg-slate-900/20 text-xs space-y-3">
+            <div className="hidden lg:block mt-8 p-4 rounded-2xl glass-panel border-slate-800/80 bg-slate-900/20 text-xs space-y-3">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-slate-400 uppercase tracking-wider">Simulation Core</span>
                 <span className="flex h-2 w-2 relative">
