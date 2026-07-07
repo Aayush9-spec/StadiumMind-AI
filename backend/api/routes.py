@@ -1,3 +1,6 @@
+import time
+import httpx
+import logging
 from fastapi import APIRouter, Depends, Request
 from backend.models.schemas import (
     CrowdPredictRequest, CrowdPredictResponse,
@@ -11,29 +14,57 @@ from backend.models.schemas import (
 from backend.utils.security import verify_token, check_rate_limit, sanitize_input
 from backend.services.ai_engine import ai_engine
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1")
 
 @router.get("/telemetry", dependencies=[Depends(verify_token)])
 async def get_telemetry(request: Request):
     """
     Returns real-time telemetry metrics for the stadium dashboard.
+    Fetches real weather data from Open-Meteo API.
     """
     check_rate_limit(request.client.host)
+    
+    # 1. Fetch real-world weather data for SoFi Stadium (33.9534, -118.3392)
+    weather_str = "Optimal (Clear, 24°C)"
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://api.open-meteo.com/v1/forecast?latitude=33.9534&longitude=-118.3392&current_weather=true",
+                timeout=3.0
+            )
+            if response.status_code == 200:
+                data = response.json()
+                temp = data["current_weather"]["temperature"]
+                wind = data["current_weather"]["windspeed"]
+                weather_str = f"Live Forecast: {temp}°C, Wind {wind} km/h"
+    except Exception as e:
+        logger.warning(f"Failed to fetch live weather from Open-Meteo: {e}. Using fallback telemetry.")
+
+    # 2. Dynamic time-progression simulation
+    now = time.localtime()
+    minute = now.tm_min
+    
+    # Simulate fluctuating flow rates
+    crowd_val = f"Gate C: {4000 + (minute * 15)} Flow/hr"
+    transport_val = f"Metro: {3 + (minute % 4)} Min intervals"
+    solar_val = f"{180 + (minute * 2)} kW output"
+    waste_pct = f"{35 + (minute % 15)}% capacity"
+
     return {
-        "crowd_density": {"status": "Warning", "value": "Gate C High Flow"},
-        "transport": {"status": "Optimal", "value": "Metro 5 Min intervals"},
+        "crowd_density": {"status": "Warning" if (minute % 2 == 0) else "Optimal", "value": crowd_val},
+        "transport": {"status": "Optimal", "value": transport_val},
         "medical": {"status": "Good", "value": "3 units active, 0 backlogged"},
-        "weather": {"status": "Optimal", "value": "Clear, 24°C"},
+        "weather": {"status": "Optimal", "value": weather_str},
         "security": {"status": "Optimal", "value": "All checkpoints cleared"},
-        "energy": {"status": "Efficient", "value": "240 kW solar output"},
-        "waste": {"status": "Optimal", "value": "Bin capacity 42%"}
+        "energy": {"status": "Efficient", "value": solar_val},
+        "waste": {"status": "Optimal", "value": waste_pct}
     }
 
 @router.post("/crowd/predict", response_model=CrowdPredictResponse, dependencies=[Depends(verify_token)])
 async def crowd_predict(payload: CrowdPredictRequest, request: Request):
     check_rate_limit(request.client.host)
     
-    # Calculate congestion status deterministically or via AI
     capacity_limit = 5000
     current_count = payload.current_count
     flow = payload.flow_rate_per_min
@@ -63,11 +94,9 @@ async def crowd_predict(payload: CrowdPredictRequest, request: Request):
 async def route_plan(payload: RouteRequest, request: Request):
     check_rate_limit(request.client.host)
     
-    # Safely sanitize start/end
     start = sanitize_input(payload.start_location)
     end = sanitize_input(payload.end_location)
     
-    # Return simulated safest path matching conditions
     path = [start, "Concourse B", "Elevator Corridor", end]
     warnings = []
     
@@ -103,7 +132,6 @@ async def volunteer_ask(payload: VolunteerQueryRequest, request: Request):
 async def sustainability_predict(payload: SustainabilityRequest, request: Request):
     check_rate_limit(request.client.host)
     
-    # Basic prediction calculations
     electricity = round((payload.estimated_attendance * 0.0015) + (1.2 if payload.temperature_celsius > 25 else 0.8), 2)
     water = round(payload.estimated_attendance * 30.0, 2)
     waste = round(payload.estimated_attendance * 0.00005, 2)

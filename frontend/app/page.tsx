@@ -9,7 +9,10 @@ import {
   Megaphone, ShieldCheck, Thermometer, Info, Sun, Moon, Volume2
 } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line } from "recharts";
+import dynamic from "next/dynamic";
 import { api } from "../lib/api";
+
+const Map = dynamic(() => import("../components/Map"), { ssr: false });
 
 // Mock Charts Data for Premium Experience
 const crowdTrendData = [
@@ -644,6 +647,15 @@ export default function Home() {
                           <p><strong>Action Recommendation:</strong> {crowdPredictResult.recommendation}</p>
                         </div>
                       )}
+                    </div>
+
+                    {/* Live Satellite Map Coordinates */}
+                    <div className="glass-panel p-6 rounded-2xl">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Compass className="w-5 h-5 text-emerald-400" />
+                        <h2 className="text-base font-bold">Active GPS Satellite View</h2>
+                      </div>
+                      <Map stadiumName="SoFi Stadium" />
                     </div>
 
                     {/* Routing Panel */}

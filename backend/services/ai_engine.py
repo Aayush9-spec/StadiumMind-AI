@@ -1,7 +1,8 @@
 import json
 import logging
 from typing import Dict, Any
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from backend.config import settings
 
 logger = logging.getLogger(__name__)
@@ -10,10 +11,9 @@ class AIEngine:
     def __init__(self):
         self.api_key = settings.GEMINI_API_KEY
         if self.api_key:
-            genai.configure(api_key=self.api_key)
-            self.model = genai.GenerativeModel("gemini-2.5-flash")
+            self.client = genai.Client(api_key=self.api_key)
         else:
-            self.model = None
+            self.client = None
             logger.warning("GEMINI_API_KEY not found. Running AI Services in offline/mock mode.")
 
     def run_prompt(self, prompt: str, schema_class=None) -> Dict[str, Any]:
@@ -21,21 +21,21 @@ class AIEngine:
         Runs a prompt against Gemini. If a schema_class is provided, requests JSON matching that schema.
         Falls back to mock data if key is missing or calls fail.
         """
-        if not self.model:
+        if not self.client:
             return self._get_mock_fallback(prompt)
 
         try:
-            # Configure response schema if supported
-            generation_config = {}
+            config = None
             if schema_class:
-                generation_config = {
-                    "response_mime_type": "application/json",
-                    "response_schema": schema_class,
-                }
+                config = types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=schema_class,
+                )
             
-            response = self.model.generate_content(
-                prompt,
-                generation_config=generation_config
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+                config=config
             )
             
             if schema_class:
