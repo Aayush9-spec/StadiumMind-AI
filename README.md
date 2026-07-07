@@ -1,0 +1,114 @@
+# StadiumMind AI 🧠
+
+### *The AI Operating System for FIFA World Cup 2026 Stadium Operations.*
+
+StadiumMind AI is an intelligent stadium operations system coordinating fans, volunteers, police, emergency responders, transit networks, and stadium organizers. Instead of addressing a single siloed problem, StadiumMind AI functions as a central brain that mitigates crowd congestion, automates dispatch pathways during medical alerts, coordinates sustainability outputs, and streamlines post-incident logging.
+
+---
+
+## 🛠️ Tech Stack
+
+*   **Frontend:** Next.js (App Router), Tailwind CSS (Glassmorphic dark UI), Framer Motion (Micro-animations)
+*   **Backend:** FastAPI (Python), Google Gemini 2.5 Flash API (AI Decision Engine & parsing)
+*   **Orchestration & Typing:** Pydantic validation (Input sanitation), Starlette
+*   **Testing:** Pytest, FastAPI TestClient
+*   **Speech Integration:** Web Speech API (Instant client-side voice transcription)
+*   **CI/CD:** GitHub Actions (Automated linting, building, and pytest checks)
+
+---
+
+## 🏗️ System Architecture
+
+```mermaid
+graph TD
+    User([Stadium Users: Fans, Staff, Volunteers, Emergency]) -->|HTTPS / WSS| Frontend[Next.js Web Frontend]
+    Frontend -->|HTTP Requests| FastAPI[FastAPI Backend Server]
+    
+    subgraph FastAPI Backend
+        Router[API Router] --> Schemas[Pydantic Validation]
+        Schemas --> Auth[Security & Rate Limiter]
+        Auth --> Engine[AI Orchestrator Brain]
+    end
+    
+    Engine -->|LLM API Calls| Gemini[Google Gemini 2.5 Flash]
+```
+
+---
+
+## 🚀 Key Features
+
+1.  **Crowd Heatmap & Inflow Predictor:** Dynamically detects gate congestion limits and redirects traffic to alternative gates.
+2.  **AI Route Planner:** Computes pathways factoring in elevation, elevators, wheelchair ramps, and congested sectors.
+3.  **Volunteer AI Assignee:** Instantly answers questions and coordinates resources by routing volunteers to high-need zones.
+4.  **Resource Sustainability AI:** Forecasts food demand, electricity yield, water consumption, and trash load based on target attendance.
+5.  **Emergency AI Dispatch:** Sanitizes inputs, extracts exact location fields, details severity, and maps direct EMS pathways.
+6.  **Voice Interface Control:** Provides touchless, hands-free inputs utilizing the Web Speech API directly in the browser.
+7.  **AI Multi-Step Decision Engine:** Reasons across chains of events (e.g. Weather Egress -> Metro Congestion -> Signage Update).
+8.  **Operations Dashboard:** Beautiful dashboard metrics cards reporting Live security checks, medical units, and transit times.
+9.  **AI Incident Report Generator:** Generates structured records, escalation levels, and action plans from raw staff radio text logs.
+10. **Sanitized Input Isolation:** Built-in protection against prompt injections, XSS vulnerabilities, and unauthorized rate-overflows.
+
+---
+
+## 📁 Repository Structure
+
+```text
+stadiummind-ai/
+├── README.md               # Polished project instructions
+├── LICENSE                 # MIT Open-Source license
+├── .env.example            # Sample configuration setting
+├── .gitignore              # Dependency & environment ignores
+├── .editorconfig           # Editor spacing configuration
+├── CONTRIBUTING.md         # Open-source contributing guidelines
+├── CODE_OF_CONDUCT.md      # Rules of conduct
+├── SECURITY.md             # Reporting vulnerabilities & security rules
+├── CHANGELOG.md            # Semantic version history
+├── docs/                   # Full system documentation
+│   ├── architecture.md
+│   ├── api.md
+│   └── decisions.md
+├── backend/                # FastAPI source folder
+│   ├── main.py
+│   ├── config.py
+│   ├── api/
+│   ├── models/
+│   ├── services/
+│   └── utils/
+├── frontend/               # Next.js App Router source
+└── tests/                  # Pytest unit tests suite
+```
+
+---
+
+## 🚀 Getting Started
+
+### 1. Backend Setup
+
+```bash
+# Move to the project root
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r backend/requirements.txt
+
+# Start the local FastAPI server
+PYTHONPATH=. python3 backend/main.py
+```
+*The FastAPI swagger docs will be available at `http://localhost:8000/docs`.*
+
+### 2. Frontend Setup
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+*The React Dashboard will be available at `http://localhost:3000`.*
+
+---
+
+## 🧪 Running Tests
+
+```bash
+# Execute the full Pytest verification suite
+PYTHONPATH=. .venv/bin/pytest
+```
