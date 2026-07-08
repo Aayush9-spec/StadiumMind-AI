@@ -4,33 +4,32 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ShieldAlert, Activity, Users, Bus, Zap, CloudRain,
-  Mic, MicOff, Search, Compass, AlertCircle, HelpCircle, FileText, CheckCircle,
+  Mic, MicOff, Search, Compass, AlertCircle, FileText, CheckCircle,
   TrendingUp, RefreshCw, Send, ArrowRight, Accessibility, LayoutDashboard,
-  Megaphone, ShieldCheck, Info, Sun, Moon, Volume2, ListOrdered, BrainCircuit
+  Megaphone, ShieldCheck, Info, Sun, Moon, Volume2, ListOrdered, BrainCircuit, Bell, User
 } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line } from "recharts";
 import { api } from "../lib/api";
 import CommandPalette from "../components/CommandPalette";
 import DigitalTwin from "../components/DigitalTwin";
 
-// Real-world forecasting trends (Dashed line overlay)
-const crowdTrendData = [
-  { time: "18:00", Inflow: 2400, Forecast: 2500 },
-  { time: "18:15", Inflow: 3800, Forecast: 3700 },
-  { time: "18:30", Inflow: 4800, Forecast: 4900 },
-  { time: "18:45", Inflow: 5900, Forecast: 5800 },
-  { time: "19:00", Inflow: 4200, Forecast: 4400 },
-  { time: "19:15", Inflow: 3100, Forecast: 3200 },
-  { time: "19:30", Inflow: 2100, Forecast: 2000 },
+// Sparkline Mock Data for Top Cards
+const sparklineDataUp = [
+  { val: 30 }, { val: 45 }, { val: 35 }, { val: 60 }, { val: 55 }, { val: 80 }, { val: 92 }
+];
+const sparklineDataDown = [
+  { val: 90 }, { val: 75 }, { val: 80 }, { val: 60 }, { val: 50 }, { val: 40 }, { val: 30 }
 ];
 
-const resourceForecastData = [
-  { hour: "14:00", Actual: 45, Forecast: 45 },
-  { hour: "16:00", Actual: 60, Forecast: 62 },
-  { hour: "18:00", Actual: 95, Forecast: 98 },
-  { hour: "20:00", Actual: 110, Forecast: 115 },
-  { hour: "22:00", Actual: null, Forecast: 135 },
-  { hour: "00:00", Actual: null, Forecast: 85 },
+// Main Chart Data
+const crowdTrendData = [
+  { time: "14:00", Flow: 25000, Forecast: 28000 },
+  { time: "15:00", Flow: 42000, Forecast: 44000 },
+  { time: "16:00", Flow: 59000, Forecast: 62000 },
+  { time: "17:00", Flow: 48000, Forecast: 50000 },
+  { time: "18:00", Flow: 88000, Forecast: 90000 },
+  { time: "19:00", Flow: 65000, Forecast: 68000 },
+  { time: "20:00", Flow: 35000, Forecast: 38000 },
 ];
 
 export default function Home() {
@@ -38,29 +37,30 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [highContrast, setHighContrast] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-  
+
   // Live Timeline feed
   const [timeline, setTimeline] = useState([
     { id: 1, time: "19:02", title: "Gate C Congestion Alert", detail: "Inflow threshold exceeded 4,000/hr limit. Rerouting rules triggered." },
-    { id: 2, time: "18:45", title: "Open-Meteo Update", detail: "Dallas/SoFi weather forecast registers 24.5°C. Precipitation probability 5%." },
-    { id: 3, time: "18:32", title: "AI Dispatch Completed", detail: "Emergency EMS team 4 reached Section 218. Casualty stabilized." },
+    { id: 2, time: "18:58", title: "Heavy Rain Warning", detail: "Rain expected in 30-40 minutes. Signage updated to show indoor paths." },
+    { id: 3, time: "18:45", title: "Metro Line 2 Delay", detail: "8 min delay reported. Shuttle buses dispatched to handle overflow." },
+    { id: 4, time: "18:30", title: "Volunteer Team Dispatched", detail: "8 volunteers sent to Gate C to assist crowd routing." },
+    { id: 5, time: "18:20", title: "Sustainability Alert", detail: "High waste generation detected in Zone B." },
   ]);
 
-  // Coordinated Operations Approved triggers
-  const [approvals, setApprovals] = useState<Record<string, string>>({
-    "Open Gate E": "PENDING",
-    "Redirect flow to Gate D": "PENDING",
-    "Dispatch shuttle buses": "PENDING"
+  // AI Recommended Actions checklist
+  const [approvals, setApprovals] = useState<Record<string, { status: string; impact: string; confidence: string }>>({
+    "Open Gate D": { status: "PENDING", impact: "High", confidence: "98%" },
+    "Dispatch 8 Volunteers": { status: "PENDING", impact: "Medium", confidence: "95%" },
+    "Delay Fireworks": { status: "PENDING", impact: "Low", confidence: "89%" }
   });
 
   const [telemetry, setTelemetry] = useState<any>({
-    crowd_density: { status: "Warning", value: "Gate C High Flow" },
-    transport: { status: "Optimal", value: "Metro 5 Min intervals" },
+    crowd_density: { status: "Warning", value: "Gate C: 92%" },
+    transport: { status: "Optimal", value: "Metro: 3 Min" },
     medical: { status: "Good", value: "3 units active" },
-    weather: { status: "Optimal", value: "Clear, 24°C" },
-    security: { status: "Optimal", value: "All clear" },
-    energy: { status: "Efficient", value: "240 kW solar" },
-    waste: { status: "Optimal", value: "42% capacity" }
+    weather: { status: "Optimal", value: "19.7°C, Clear" },
+    energy: { status: "Efficient", value: "72% Optimal" },
+    waste: { status: "Optimal", value: "4.2 tons" }
   });
 
   // Feature parameters
@@ -171,7 +171,6 @@ export default function Home() {
     try {
       const res = await api.predictCrowd(gateId, currentCount, flowRate);
       setCrowdPredictResult(res);
-      // Append to live timeline
       setTimeline((prev) => [
         { id: Date.now(), time: "Just Now", title: "Crowd Prediction Computed", detail: `Gate ${gateId} capacity threshold predicted. status: ${res.congestion_status}.` },
         ...prev
@@ -242,10 +241,9 @@ export default function Home() {
     try {
       const res = await api.triggerDecision(scenario);
       setDecisionResult(res);
-      // Populate dynamic approvals checklist
-      const newApprovals: Record<string, string> = {};
+      const newApprovals: Record<string, { status: string; impact: string; confidence: string }> = {};
       res.actions.forEach((act: string) => {
-        newApprovals[act] = "PENDING";
+        newApprovals[act] = { status: "PENDING", impact: "High", confidence: "95%" };
       });
       setApprovals(newApprovals);
     } catch (e: any) {
@@ -270,7 +268,7 @@ export default function Home() {
   const handleActionApproval = (actionKey: string, status: string) => {
     setApprovals((prev) => ({
       ...prev,
-      [actionKey]: status
+      [actionKey]: { ...prev[actionKey], status }
     }));
     setTimeline((prev) => [
       { id: Date.now(), time: "Just Now", title: `Decision Approved: ${actionKey}`, detail: `Operations coordinator approved task assignment.` },
@@ -290,7 +288,7 @@ export default function Home() {
         
         {/* Header Block */}
         <header className="border-b border-[#E8ECF4] bg-white sticky top-0 z-50 shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 md:px-8 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="max-w-7xl mx-auto px-4 md:px-8 py-3.5 flex flex-col md:flex-row items-center justify-between gap-4">
             
             {/* Logo and Brand */}
             <div className="flex items-center gap-3">
@@ -308,17 +306,34 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Top Search bar Console (Mockup layout center) */}
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#E8ECF4] bg-[#F7F8FC] w-72">
+              <Search className="w-4 h-4 text-[#6B7280]" />
+              <input 
+                onClick={() => setIsCommandPaletteOpen(true)}
+                type="text" 
+                placeholder="Search command console..." 
+                readOnly
+                className="bg-transparent text-xs outline-none text-[#111827] placeholder-[#6B7280] cursor-pointer w-full"
+              />
+              <kbd className="bg-white border border-[#E8ECF4] text-[9px] px-1.5 py-0.5 rounded font-bold text-[#6B7280]">⌘K</kbd>
+            </div>
+
             {/* Top Toolbar Actions */}
             <div className="flex items-center gap-3">
-              
-              {/* Cmd+K visual label */}
-              <button 
-                onClick={() => setIsCommandPaletteOpen(true)}
-                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#E8ECF4] bg-[#F7F8FC] hover:bg-slate-100 text-xs font-semibold text-[#6B7280] transition"
+              <div className="flex items-center gap-1 bg-[#F7F8FC] border border-[#E8ECF4] px-2.5 py-1 rounded-lg text-xs text-[#16A34A] font-bold">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A] animate-ping" />
+                <span>All Systems Operational</span>
+              </div>
+
+              <select 
+                id="header-lang-selector"
+                aria-label="Select Language"
+                className="bg-white border border-[#E8ECF4] rounded-lg px-2 py-1 text-xs text-[#111827] outline-none"
               >
-                <span>Search Console</span>
-                <kbd className="bg-white border border-[#E8ECF4] text-[9px] px-1.5 py-0.5 rounded font-bold">⌘K</kbd>
-              </button>
+                <option value="en">English</option>
+                <option value="es">Español</option>
+              </select>
 
               <button
                 onClick={() => setHighContrast(!highContrast)}
@@ -341,6 +356,17 @@ export default function Home() {
                 {isListening ? "Listening" : "Voice AI"}
               </button>
 
+              {/* Ops Admin profile */}
+              <div className="flex items-center gap-2 pl-3 border-l border-[#E8ECF4]">
+                <div className="p-1 bg-[#F7F8FC] border border-[#E8ECF4] rounded-full">
+                  <User className="w-4 h-4 text-[#6B7280]" />
+                </div>
+                <div className="hidden sm:block text-left">
+                  <p className="text-[10px] font-bold text-[#111827]">Ops Admin</p>
+                  <p className="text-[8px] text-[#6B7280] font-semibold uppercase">Administrator</p>
+                </div>
+              </div>
+
             </div>
 
           </div>
@@ -358,24 +384,10 @@ export default function Home() {
           }}
         />
 
-        {/* Global Warning Bar */}
-        <div className="bg-[#F7F8FC] border-b border-[#E8ECF4] py-2 px-4">
-          <div className="max-w-7xl mx-auto flex items-center justify-between text-[11px] font-semibold text-[#6B7280]">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Dallas Venue Feed: Connected</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <span>Gate A Flow: Optimal</span>
-              <span>Gate C Flow: Heavy Egress</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Central Grid Content */}
+        {/* Central Layout Grid */}
         <div className="flex-1 max-w-7xl w-full mx-auto px-4 md:px-8 py-8 flex flex-col lg:flex-row gap-8">
           
-          {/* Navigation Tab list (Horizontal on mobile, vertical on desktop) */}
+          {/* Navigation Tab list */}
           <aside className="w-full lg:w-60 flex-shrink-0">
             <nav className="flex flex-row overflow-x-auto lg:flex-col gap-1.5 pb-3 lg:pb-0 scrollbar-none" aria-label="Operating system navigation">
               <button
@@ -441,15 +453,15 @@ export default function Home() {
               <div className="space-y-2 text-xs">
                 <div className="flex justify-between">
                   <span className="text-[#6B7280]">GenAI SDK:</span>
-                  <strong className="text-emerald-600">google-genai 2.10</strong>
+                  <strong className="text-[#16A34A]">google-genai 2.10</strong>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[#6B7280]">Weather API:</span>
                   <strong className="text-[#111827]">Open-Meteo</strong>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#6B7280]">Diagnostic Latency:</span>
-                  <strong className="text-[#111827]">22ms</strong>
+                  <span className="text-[#6B7280]">Response Latency:</span>
+                  <strong className="text-[#111827]">120ms</strong>
                 </div>
               </div>
             </div>
@@ -470,182 +482,320 @@ export default function Home() {
                 {activeTab === "overview" && (
                   <div className="space-y-8">
                     
-                    {/* Live AI Insight Cards Row (Palantir style) */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Top 4 premium metric cards matching mockup layout */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                       
-                      <div className="glass-panel p-5 rounded-2xl border-l-4 border-l-amber-500">
-                        <div className="flex justify-between items-center mb-3">
-                          <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">Inflow Congestion</span>
-                          <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">92% CONFIDENCE</span>
+                      <div className="bg-white border border-[#E8ECF4] p-5 rounded-2xl shadow-sm hover:shadow-md transition duration-300">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Inflow Congestion</span>
+                            <h4 className="text-lg font-black text-[#111827]">{telemetry.crowd_density.value}</h4>
+                            <span className="inline-block mt-2 text-[9px] font-black text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">High Risk</span>
+                            <span className="text-[9px] text-[#6B7280] block mt-1">↑ 18% vs last 15 min</span>
+                          </div>
+                          
+                          {/* Mini Sparkline Chart */}
+                          <div className="w-16 h-10">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <AreaChart data={sparklineDataUp}>
+                                <Area type="monotone" dataKey="val" stroke="#EF4444" fill="rgba(239, 68, 68, 0.05)" strokeWidth={1.5} dot={false} />
+                              </AreaChart>
+                            </ResponsiveContainer>
+                          </div>
                         </div>
-                        <p className="text-xl font-black">{telemetry.crowd_density.value}</p>
-                        <p className="text-xs text-slate-400 mt-2"><strong>AI Action:</strong> Recommend redirecting flow to West Gate D Concourse corridor.</p>
-                        <button 
-                          onClick={() => { setGateId("Gate C"); handleCrowdPredict(); }}
-                          className="mt-3 text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1.5"
-                        >
-                          Trigger Mitigation <ArrowRight className="w-3.5 h-3.5" />
-                        </button>
                       </div>
 
-                      <div className="glass-panel p-5 rounded-2xl border-l-4 border-l-emerald-500">
-                        <div className="flex justify-between items-center mb-3">
-                          <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">Egress Transit</span>
-                          <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">98% CONFIDENCE</span>
+                      <div className="bg-white border border-[#E8ECF4] p-5 rounded-2xl shadow-sm hover:shadow-md transition duration-300">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Egress Transit</span>
+                            <h4 className="text-lg font-black text-[#111827]">{telemetry.transport.value}</h4>
+                            <span className="inline-block mt-2 text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">Optimal</span>
+                            <span className="text-[9px] text-[#6B7280] block mt-1">On-time performance</span>
+                          </div>
+                          
+                          {/* Mini Sparkline Chart */}
+                          <div className="w-16 h-10">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <AreaChart data={sparklineDataDown}>
+                                <Area type="monotone" dataKey="val" stroke="#16A34A" fill="rgba(22, 163, 74, 0.05)" strokeWidth={1.5} dot={false} />
+                              </AreaChart>
+                            </ResponsiveContainer>
+                          </div>
                         </div>
-                        <p className="text-xl font-black">{telemetry.transport.value}</p>
-                        <p className="text-xs text-slate-400 mt-2"><strong>AI Action:</strong> Metro line active. Keep digital signage indicators optimized.</p>
                       </div>
 
-                      <div className="glass-panel p-5 rounded-2xl border-l-4 border-l-purple-500">
-                        <div className="flex justify-between items-center mb-3">
-                          <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">Live Environmental Feed</span>
-                          <span className="text-[10px] font-bold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">LIVE DATA</span>
+                      <div className="bg-white border border-[#E8ECF4] p-5 rounded-2xl shadow-sm hover:shadow-md transition duration-300">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Environmental</span>
+                            <h4 className="text-lg font-black text-[#111827]">{telemetry.weather.value}</h4>
+                            <span className="inline-block mt-2 text-[9px] font-black text-blue-600 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded">Clear</span>
+                            <span className="text-[9px] text-[#6B7280] block mt-1">Wind 10.8 km/h</span>
+                          </div>
+                          <CloudRain className="w-6 h-6 text-blue-500" />
                         </div>
-                        <p className="text-xl font-black">{telemetry.weather.value}</p>
-                        <p className="text-xs text-slate-400 mt-2"><strong>Source:</strong> Open-Meteo current forecast query for SoFi coordinate grid.</p>
+                      </div>
+
+                      <div className="bg-white border border-[#E8ECF4] p-5 rounded-2xl shadow-sm hover:shadow-md transition duration-300">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Live Attendance</span>
+                            <h4 className="text-lg font-black text-[#111827]">62,845</h4>
+                            <span className="inline-block mt-2 text-[9px] font-black text-[#4F46E5] bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded">↑ 1,245 today</span>
+                            <span className="text-[9px] text-[#6B7280] block mt-1">Capacity: 78%</span>
+                          </div>
+                          <Users className="w-6 h-6 text-[#4F46E5]" />
+                        </div>
                       </div>
 
                     </div>
 
-                    {/* AI Commander Decision Panel & approvals list */}
-                    <div className="glass-panel p-6 rounded-2xl border-purple-500/20 bg-purple-950/5">
-                      <div className="flex items-center gap-2 mb-4">
-                        <BrainCircuit className="w-5 h-5 text-purple-400 animate-pulse" />
-                        <h2 className="text-sm font-bold uppercase tracking-wider text-slate-200">AI Commander Decision Orchestrator</h2>
-                      </div>
+                    {/* Middle grid: Digital Twin on Left, AI Insights / Right sidebar AI Commander */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                       
-                      <div className="mb-4">
-                        <label htmlFor="decision-scenario-select" className="text-xs font-bold text-slate-400 block mb-1">Target Egress Scenario Trigger</label>
-                        <select
-                          id="decision-scenario-select"
-                          value={scenario}
-                          onChange={(e) => setScenario(e.target.value)}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-lg py-2.5 px-3 text-sm focus:outline-none"
-                        >
-                          <option value="Sudden heavy rainstorm during egress peak">Sudden heavy rainstorm during egress peak</option>
-                          <option value="Public metro line failure in zone C corridor">Public metro line failure in zone C corridor</option>
-                          <option value="Security alert near Gate B concourse">Security alert near Gate B concourse</option>
-                        </select>
+                      {/* Left and center modules */}
+                      <div className="lg:col-span-2 space-y-8">
+                        
+                        {/* Digital Twin */}
+                        <DigitalTwin
+                          stadiumName="SoFi Stadium"
+                          gateStatus={{
+                            "Gate A": { count: 3400, status: "MEDIUM", percentage: 72 },
+                            "Gate B": { count: 2100, status: "NORMAL", percentage: 48 },
+                            "Gate C": { count: 4800, status: "HIGH", percentage: 92 },
+                            "Gate D": { count: 1800, status: "MEDIUM", percentage: 61 },
+                            "Gate E": { count: 1200, status: "NORMAL", percentage: 35 }
+                          }}
+                          onSelectNode={(gateKey) => {
+                            setGateId(gateKey);
+                            handleCrowdPredict();
+                          }}
+                        />
+
+                        {/* Crowd Flow vs Forecast Chart */}
+                        <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
+                          <div className="flex justify-between items-center mb-4">
+                            <div>
+                              <h3 className="text-xs font-bold text-[#111827]">Crowd Flow vs Forecast</h3>
+                              <p className="text-[10px] text-[#6B7280] uppercase tracking-wider">Real-time simulation overlay</p>
+                            </div>
+                            <span className="text-[10px] bg-[#F7F8FC] border border-[#E8ECF4] text-[#6B7280] px-2 py-0.5 rounded font-bold uppercase">Real-time</span>
+                          </div>
+                          <div className="h-64">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <AreaChart data={crowdTrendData}>
+                                <defs>
+                                  <linearGradient id="colorFlow" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.2}/>
+                                    <stop offset="95%" stopColor="#4F46E5" stopOpacity={0}/>
+                                  </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                                <XAxis dataKey="time" stroke="#6B7280" fontSize={10} />
+                                <YAxis stroke="#6B7280" fontSize={10} />
+                                <Tooltip contentStyle={{ backgroundColor: "#FFFFFF", borderColor: "#E8ECF4" }} />
+                                <Area type="monotone" dataKey="Flow" stroke="#4F46E5" strokeWidth={2.5} fillOpacity={1} fill="url(#colorFlow)" />
+                                <Line type="monotone" dataKey="Forecast" stroke="#94A3B8" strokeWidth={1.5} strokeDasharray="5 5" dot={false} />
+                              </AreaChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </div>
+
                       </div>
 
-                      <button 
-                        onClick={handleTriggerDecision}
-                        disabled={loading}
-                        className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 transition rounded-lg text-xs font-bold uppercase tracking-wider"
-                      >
-                        Generate Coordinated Action Flow
-                      </button>
+                      {/* Right sidebar AI Commander Panel */}
+                      <div className="space-y-8">
+                        
+                        <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm space-y-6">
+                          <div className="flex justify-between items-center pb-4 border-b border-[#E8ECF4]">
+                            <div className="flex items-center gap-2">
+                              <BrainCircuit className="w-5 h-5 text-[#4F46E5]" />
+                              <h3 className="text-sm font-bold text-[#111827]">AI Commander</h3>
+                            </div>
+                            <span className="text-[9px] bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                              Online
+                            </span>
+                          </div>
 
-                      {decisionResult && (
-                        <div className="mt-6 space-y-6">
-                          
-                          {/* Reasoning timeline */}
-                          <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
-                            <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest block">AI Reasoning Stream</span>
-                            <div className="text-xs space-y-1.5 text-slate-300">
-                              {decisionResult.reasoning_steps.map((step: string, idx: number) => (
-                                <p key={idx} className="flex gap-2">
-                                  <span className="text-purple-500 font-bold">{idx + 1}.</span>
-                                  {step}
-                                </p>
-                              ))}
+                          {/* Match clock */}
+                          <div className="p-4 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl flex justify-between items-center">
+                            <div>
+                              <p className="text-[10px] text-[#6B7280] uppercase tracking-wider font-semibold">Current Match</p>
+                              <strong className="text-xs text-[#111827]">Mexico vs Japan</strong>
+                              <p className="text-[9px] text-[#6B7280]">Group Stage • Match 24</p>
+                            </div>
+                            <span className="bg-red-500 text-white text-[11px] font-black px-2 py-1 rounded">
+                              45:32
+                            </span>
+                          </div>
+
+                          {/* Critical Alerts */}
+                          <div className="space-y-3">
+                            <div className="flex justify-between text-[10px] font-bold text-[#6B7280] uppercase">
+                              <span>Critical Alerts</span>
+                              <span className="text-red-500 bg-red-50 px-1.5 py-0.5 rounded font-black">3</span>
+                            </div>
+
+                            <div className="p-3 bg-red-50/50 border border-red-100 rounded-xl space-y-1">
+                              <p className="text-xs font-bold text-red-700">Gate C Overcrowding</p>
+                              <p className="text-[10px] text-red-600">Risk Level: High</p>
+                            </div>
+                            
+                            <div className="p-3 bg-amber-50/50 border border-amber-100 rounded-xl space-y-1">
+                              <p className="text-xs font-bold text-amber-700">Heavy Rain Incoming</p>
+                              <p className="text-[10px] text-amber-600">ETA: 32 minutes</p>
                             </div>
                           </div>
 
-                          {/* Approvals check grid */}
+                          {/* AI Recommended Actions checklist */}
                           <div className="space-y-3">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Coordinator Approvals Checklist</span>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                              {Object.keys(approvals).map((actName) => (
-                                <div key={actName} className="p-4 bg-slate-900/60 border border-slate-800 rounded-xl flex flex-col justify-between h-28">
-                                  <span className="text-xs font-bold text-slate-200 block truncate">{actName}</span>
-                                  
-                                  <div className="flex gap-2 mt-3">
-                                    {approvals[actName] === "PENDING" ? (
-                                      <>
+                            <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-widest block">AI Recommended Actions</span>
+                            
+                            <div className="space-y-2">
+                              {Object.keys(approvals).map((actName) => {
+                                const details = approvals[actName];
+                                return (
+                                  <div key={actName} className="p-3 bg-white border border-[#E8ECF4] rounded-xl flex items-center justify-between shadow-sm">
+                                    <div>
+                                      <strong className="text-xs text-[#111827]">{actName}</strong>
+                                      <p className="text-[9px] text-[#6B7280]">Impact: {details.impact} • {details.confidence} confidence</p>
+                                    </div>
+                                    
+                                    <div>
+                                      {details.status === "PENDING" ? (
                                         <button 
                                           onClick={() => handleActionApproval(actName, "APPROVED")}
-                                          className="flex-1 py-1 bg-emerald-600 hover:bg-emerald-700 rounded text-[10px] font-bold text-white uppercase"
+                                          className="py-1 px-3 bg-[#4F46E5] hover:bg-indigo-700 text-white rounded text-[10px] font-bold uppercase transition"
                                         >
                                           Approve
                                         </button>
-                                        <button 
-                                          onClick={() => handleActionApproval(actName, "REJECTED")}
-                                          className="flex-1 py-1 bg-slate-800 hover:bg-slate-700 rounded text-[10px] font-bold text-slate-400 uppercase"
-                                        >
-                                          Reject
-                                        </button>
-                                      </>
-                                    ) : (
-                                      <span className={`w-full py-1 text-center rounded text-[10px] font-bold uppercase ${
-                                        approvals[actName] === "APPROVED" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"
-                                      }`}>
-                                        {approvals[actName]}
-                                      </span>
-                                    )}
+                                      ) : (
+                                        <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded uppercase">
+                                          Approved
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
-                              ))}
+                                );
+                              })}
+                            </div>
+
+                            <button 
+                              onClick={() => {
+                                Object.keys(approvals).forEach(k => handleActionApproval(k, "APPROVED"));
+                              }}
+                              className="w-full mt-2 py-2 bg-[#4F46E5] hover:bg-indigo-700 text-white transition rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm"
+                            >
+                              Approve All Recommendations
+                            </button>
+                          </div>
+
+                          {/* Commander Query Input */}
+                          <div className="border-t border-[#E8ECF4] pt-4">
+                            <label htmlFor="commander-ask-input" className="sr-only">Ask StadiumMind AI</label>
+                            <div className="flex gap-2">
+                              <input 
+                                id="commander-ask-input"
+                                type="text"
+                                placeholder="Ask StadiumMind AI..."
+                                className="flex-1 bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-xs outline-none text-[#111827] placeholder-[#6B7280]"
+                              />
+                              <button 
+                                aria-label="Send Query"
+                                className="p-2 bg-[#F7F8FC] border border-[#E8ECF4] hover:bg-slate-100 rounded-lg"
+                              >
+                                <Send className="w-3.5 h-3.5 text-[#6B7280]" />
+                              </button>
                             </div>
                           </div>
 
                         </div>
-                      )}
+
+                        {/* AI Insights List */}
+                        <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
+                          <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xs font-bold text-[#111827]">AI Insights</h3>
+                            <span className="w-2 h-2 rounded-full bg-[#16A34A] animate-pulse" />
+                          </div>
+
+                          <div className="space-y-3.5 text-xs">
+                            <div className="flex justify-between items-center">
+                              <span className="text-[#111827] font-semibold">Gate C congestion increasing</span>
+                              <span className="text-[9px] text-[#6B7280]">2 min ago</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-[#111827] font-semibold">Rain probability in 30 mins</span>
+                              <span className="text-[9px] text-[#6B7280]">5 min ago</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-[#111827] font-semibold">Spanish help requests</span>
+                              <span className="text-[9px] text-[#6B7280]">7 min ago</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-[#111827] font-semibold">Waste collection behind</span>
+                              <span className="text-[9px] text-[#6B7280]">10 min ago</span>
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>
+
                     </div>
 
-                    {/* Historical Trend and Live Log Feed Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Bottom row: Incident Log Timeline & 6 metric pills */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                       
-                      {/* Egress Trend Graph */}
-                      <div className="glass-panel p-6 rounded-2xl lg:col-span-2">
+                      {/* Live Incident Timeline list */}
+                      <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm lg:col-span-2">
                         <div className="flex justify-between items-center mb-4">
-                          <div>
-                            <h3 className="text-xs font-bold text-slate-200">Egress Inflow vs Forecast</h3>
-                            <p className="text-[10px] text-slate-500 uppercase tracking-wide">Dynamic overlay</p>
-                          </div>
-                          <span className="text-[10px] bg-slate-900 border border-slate-800 text-slate-400 px-2 py-0.5 rounded font-bold uppercase">Real-time Feed</span>
+                          <h3 className="text-xs font-bold text-[#111827]">Live Incident Timeline</h3>
+                          <button className="text-[10px] text-[#4F46E5] font-bold hover:underline">View All</button>
                         </div>
-                        <div className="h-60">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={crowdTrendData}>
-                              <defs>
-                                <linearGradient id="colorInflow" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/>
-                                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                                </linearGradient>
-                              </defs>
-                              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
-                              <XAxis dataKey="time" stroke="#475569" fontSize={10} />
-                              <YAxis stroke="#475569" fontSize={10} />
-                              <Tooltip contentStyle={{ backgroundColor: "#090d16", borderColor: "rgba(255,255,255,0.08)" }} />
-                              <Area type="monotone" dataKey="Inflow" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorInflow)" />
-                              <Line type="monotone" dataKey="Forecast" stroke="#64748b" strokeWidth={1.5} strokeDasharray="5 5" dot={false} />
-                            </AreaChart>
-                          </ResponsiveContainer>
+                        
+                        <div className="space-y-4 max-h-60 overflow-y-auto">
+                          {timeline.map((evt) => (
+                            <div key={evt.id} className="relative pl-4 border-l border-[#E8ECF4] text-xs">
+                              <span className="absolute top-1 left-[-4px] w-2 h-2 rounded-full bg-[#4F46E5]" />
+                              <div className="flex justify-between text-[10px] text-[#6B7280] font-bold mb-0.5">
+                                <span>{evt.title}</span>
+                                <span>{evt.time}</span>
+                              </div>
+                              <p className="text-[11px] text-[#6B7280] leading-relaxed">{evt.detail}</p>
+                            </div>
+                          ))}
                         </div>
                       </div>
 
-                      {/* Live Incident Timeline Log */}
-                      <div className="glass-panel p-6 rounded-2xl flex flex-col justify-between">
-                        <div>
-                          <h3 className="text-xs font-bold text-slate-200 mb-4">Live Incident Log Timeline</h3>
-                          <div className="space-y-4 max-h-56 overflow-y-auto">
-                            {timeline.map((evt) => (
-                              <div key={evt.id} className="relative pl-4 border-l border-slate-800 text-xs">
-                                <span className="absolute top-1 left-[-4px] w-2 h-2 rounded-full bg-blue-500" />
-                                <div className="flex justify-between text-[10px] text-slate-400 font-bold mb-0.5">
-                                  <span>{evt.title}</span>
-                                  <span>{evt.time}</span>
-                                </div>
-                                <p className="text-[11px] text-slate-300 leading-relaxed">{evt.detail}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
+                      {/* 6 Bottom Metric pills */}
+                      <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm space-y-4">
+                        <h3 className="text-xs font-bold text-[#111827] mb-2">Resource Deployments</h3>
                         
-                        <div className="border-t border-slate-900 pt-3 mt-4 text-[10px] text-slate-500 uppercase tracking-widest text-center">
-                          Diagnostics: All clear
+                        <div className="grid grid-cols-2 gap-3 text-xs">
+                          <div className="p-3 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-center">
+                            <span className="text-[9px] text-[#6B7280] block font-semibold uppercase">Active Volunteers</span>
+                            <strong className="text-sm text-[#111827]">1,248</strong>
+                          </div>
+                          <div className="p-3 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-center">
+                            <span className="text-[9px] text-[#6B7280] block font-semibold uppercase">Medical Teams</span>
+                            <strong className="text-sm text-[#111827]">24</strong>
+                          </div>
+                          <div className="p-3 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-center">
+                            <span className="text-[9px] text-[#6B7280] block font-semibold uppercase">Shuttle Buses</span>
+                            <strong className="text-sm text-[#111827]">78</strong>
+                          </div>
+                          <div className="p-3 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-center">
+                            <span className="text-[9px] text-[#6B7280] block font-semibold uppercase">Parking Occupancy</span>
+                            <strong className="text-sm text-[#111827]">89%</strong>
+                          </div>
+                          <div className="p-3 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-center">
+                            <span className="text-[9px] text-[#6B7280] block font-semibold uppercase">Energy Usage</span>
+                            <strong className="text-sm text-[#111827]">72%</strong>
+                          </div>
+                          <div className="p-3 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-center">
+                            <span className="text-[9px] text-[#6B7280] block font-semibold uppercase">Waste Collected</span>
+                            <strong className="text-sm text-[#111827]">4.2 tons</strong>
+                          </div>
                         </div>
                       </div>
 
@@ -658,14 +808,14 @@ export default function Home() {
                 {activeTab === "crowd" && (
                   <div className="space-y-8">
                     
-                    {/* SVG twin model mapping */}
                     <DigitalTwin
                       stadiumName="SoFi Stadium"
                       gateStatus={{
-                        "Gate A": { count: 3400, status: "NORMAL" },
-                        "Gate B": { count: 2100, status: "NORMAL" },
-                        "Gate C": { count: 4800, status: "HIGH" },
-                        "Gate D": { count: 1800, status: "NORMAL" },
+                        "Gate A": { count: 3400, status: "MEDIUM", percentage: 72 },
+                        "Gate B": { count: 2100, status: "NORMAL", percentage: 48 },
+                        "Gate C": { count: 4800, status: "HIGH", percentage: 92 },
+                        "Gate D": { count: 1800, status: "MEDIUM", percentage: 61 },
+                        "Gate E": { count: 1200, status: "NORMAL", percentage: 35 }
                       }}
                       onSelectNode={(gateKey) => {
                         setGateId(gateKey);
@@ -674,51 +824,51 @@ export default function Home() {
                     />
 
                     {/* Routing logic pathfinder */}
-                    <div className="glass-panel p-6 rounded-2xl">
+                    <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
                       <div className="flex items-center gap-2 mb-4">
-                        <Compass className="w-5 h-5 text-indigo-400" />
+                        <Compass className="w-5 h-5 text-[#4F46E5]" />
                         <h2 className="text-sm font-bold uppercase tracking-wider">AI Pathfinding Navigation Coordinator</h2>
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
-                          <label htmlFor="twin-route-start" className="text-xs font-bold text-slate-400 block mb-1">Starting Location Sector</label>
+                          <label htmlFor="route-start-input" className="text-xs font-bold text-[#6B7280] block mb-1">Starting Location Sector</label>
                           <input 
-                            id="twin-route-start"
+                            id="route-start-input"
                             type="text" 
                             value={routeStart} 
                             onChange={(e) => setRouteStart(e.target.value)}
-                            className="w-full bg-slate-900 border border-slate-800 rounded-lg py-2 px-3 text-sm focus:outline-none"
+                            className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
                           />
                         </div>
                         <div>
-                          <label htmlFor="twin-route-end" className="text-xs font-bold text-slate-400 block mb-1">Egress target Gate</label>
+                          <label htmlFor="route-end-input" className="text-xs font-bold text-[#6B7280] block mb-1">Egress target Gate</label>
                           <input 
-                            id="twin-route-end"
+                            id="route-end-input"
                             type="text" 
                             value={routeEnd} 
                             onChange={(e) => setRouteEnd(e.target.value)}
-                            className="w-full bg-slate-900 border border-slate-800 rounded-lg py-2 px-3 text-sm focus:outline-none"
+                            className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
                           />
                         </div>
                       </div>
 
                       <div className="flex gap-6 mb-4">
-                        <label className="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer">
+                        <label className="flex items-center gap-2 text-xs font-bold text-[#111827] cursor-pointer">
                           <input 
                             type="checkbox" 
                             checked={wheelchair} 
                             onChange={(e) => setWheelchair(e.target.checked)}
-                            className="rounded border-slate-800 bg-slate-950 text-blue-600"
+                            className="rounded border-[#E8ECF4] bg-[#F7F8FC] text-[#4F46E5]"
                           />
                           Wheelchair Access Required
                         </label>
-                        <label className="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer">
+                        <label className="flex items-center gap-2 text-xs font-bold text-[#111827] cursor-pointer">
                           <input 
                             type="checkbox" 
                             checked={elevator} 
                             onChange={(e) => setElevator(e.target.checked)}
-                            className="rounded border-slate-800 bg-slate-950 text-blue-600"
+                            className="rounded border-[#E8ECF4] bg-[#F7F8FC] text-[#4F46E5]"
                           />
                           Elevators prioritize
                         </label>
@@ -727,13 +877,13 @@ export default function Home() {
                       <button 
                         onClick={handleRoutePlan}
                         disabled={loading}
-                        className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 transition rounded-lg text-xs font-bold uppercase tracking-wider"
+                        className="w-full py-2.5 bg-[#4F46E5] hover:bg-indigo-700 transition rounded-lg text-xs font-bold text-white uppercase tracking-wider"
                       >
                         Map safest route coordinates
                       </button>
 
                       {routeResult && (
-                        <div className="mt-6 p-4 bg-slate-900/60 border border-slate-800 rounded-xl text-xs space-y-1">
+                        <div className="mt-6 p-4 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-xs space-y-1">
                           <p><strong>Computed Pathway:</strong> {routeResult.path.join(" ➔ ")}</p>
                           <p><strong>ETA:</strong> {routeResult.estimated_minutes} minutes</p>
                         </div>
@@ -747,46 +897,46 @@ export default function Home() {
                 {activeTab === "emergency" && (
                   <div className="space-y-8">
                     
-                    <div className="glass-panel p-6 rounded-2xl border-red-500/20 bg-red-950/5">
-                      <div className="flex items-center gap-2 mb-4 text-red-400">
+                    <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm border-l-4 border-l-red-500">
+                      <div className="flex items-center gap-2 mb-4 text-red-600">
                         <ShieldAlert className="w-5 h-5 animate-pulse" />
                         <h2 className="text-sm font-bold uppercase tracking-wider">Rescue EMS Dispatcher Console</h2>
                       </div>
                       
                       <div className="mb-4">
-                        <label htmlFor="emergency-alarm-feed-input" className="text-xs font-bold text-slate-400 block mb-1">Radio Alert Transcript (Live Feed)</label>
+                        <label htmlFor="emergency-radio-alert-input" className="text-xs font-bold text-[#6B7280] block mb-1">Radio Alert Transcript (Live Feed)</label>
                         <textarea 
-                          id="emergency-alarm-feed-input"
+                          id="emergency-radio-alert-input"
                           rows={3}
                           value={emergencyText} 
                           onChange={(e) => setEmergencyText(e.target.value)}
-                          className="w-full bg-slate-900 border border-slate-850 rounded-lg py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-red-500 text-slate-100"
+                          className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
                         />
                       </div>
 
                       <button 
                         onClick={() => handleEmergencyReport()}
                         disabled={loading}
-                        className="w-full py-2.5 bg-red-600 hover:bg-red-700 transition rounded-lg text-xs font-bold uppercase tracking-wider"
+                        className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white transition rounded-lg text-xs font-bold uppercase tracking-wider"
                       >
                         Dispatch rescue teams
                       </button>
 
                       {emergencyResult && (
-                        <div className="mt-6 p-4 bg-red-950/20 border border-red-500/20 rounded-xl text-xs">
+                        <div className="mt-6 p-4 bg-red-50 border border-red-100 rounded-xl text-xs">
                           <div className="grid grid-cols-2 gap-4 mb-3">
                             <div>
-                              <span className="text-slate-400 block uppercase tracking-wider text-[10px]">Extracted Coordinates</span>
-                              <strong className="text-red-200 text-sm">{emergencyResult.extracted_location}</strong>
+                              <span className="text-[#6B7280] block uppercase tracking-wider text-[10px]">Extracted Coordinates</span>
+                              <strong className="text-red-700 text-sm">{emergencyResult.extracted_location}</strong>
                             </div>
                             <div>
-                              <span className="text-slate-400 block uppercase tracking-wider text-[10px]">Risk Tier</span>
-                              <span className="px-2 py-0.5 rounded text-[10px] font-black bg-red-500 text-white animate-pulse">
+                              <span className="text-[#6B7280] block uppercase tracking-wider text-[10px]">Risk Tier</span>
+                              <span className="px-2 py-0.5 rounded text-[10px] font-black bg-red-600 text-white animate-pulse">
                                 {emergencyResult.severity}
                               </span>
                             </div>
                           </div>
-                          <div className="space-y-1.5 border-t border-red-500/10 pt-3 text-slate-350">
+                          <div className="space-y-1.5 border-t border-red-200 pt-3 text-slate-700">
                             <p><strong>Dispatched Team:</strong> {emergencyResult.dispatched_unit}</p>
                             <p><strong>Cleared Route:</strong> {emergencyResult.suggested_route}</p>
                             <p><strong>Expected Arrival:</strong> {emergencyResult.eta_minutes} mins</p>
@@ -795,39 +945,38 @@ export default function Home() {
                       )}
                     </div>
 
-                    <div className="glass-panel p-6 rounded-2xl">
+                    <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
                       <div className="flex items-center gap-2 mb-4">
-                        <FileText className="w-5 h-5 text-teal-400" />
-                        <h2 className="text-sm font-bold uppercase tracking-wider">AI Incident report compiler</h2>
+                        <FileText className="w-5 h-5 text-teal-600" />
+                        <h2 className="text-sm font-bold uppercase tracking-wider">AI Incident Report Compiler</h2>
                       </div>
                       
                       <div className="mb-4">
-                        <label htmlFor="raw-log-compilation-input" className="text-xs font-bold text-slate-400 block mb-1">Raw radio log text</label>
+                        <label htmlFor="incident-radio-log-input" className="text-xs font-bold text-[#6B7280] block mb-1">Raw radio log text</label>
                         <textarea 
-                          id="raw-log-compilation-input"
+                          id="incident-radio-log-input"
                           rows={3}
                           value={rawIncidentText} 
                           onChange={(e) => setRawIncidentText(e.target.value)}
-                          className="w-full bg-slate-900 border border-slate-800 rounded-lg py-2 px-3 text-sm focus:outline-none"
+                          className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
                         />
                       </div>
 
                       <button 
                         onClick={handleGenerateIncident}
                         disabled={loading}
-                        className="w-full py-2.5 bg-teal-600 hover:bg-teal-700 transition rounded-lg text-xs font-bold uppercase tracking-wider"
+                        className="w-full py-2.5 bg-teal-600 hover:bg-teal-700 text-white transition rounded-lg text-xs font-bold uppercase tracking-wider"
                       >
                         Compile formal incident record
                       </button>
 
                       {incidentResult && (
-                        <div className="mt-6 p-4 bg-slate-900/60 border border-slate-800 rounded-xl text-xs space-y-3 text-slate-300">
+                        <div className="mt-6 p-4 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-xs space-y-3 text-slate-700">
                           <p><strong>Summary:</strong> {incidentResult.summary}</p>
                           <p><strong>Severity Rating:</strong> {incidentResult.severity}</p>
                           <p><strong>Remediation:</strong> {incidentResult.recommended_action}</p>
                           <p><strong>Gear Required:</strong> {incidentResult.resources_required.join(", ")}</p>
                           <p><strong>Resolution ETA:</strong> {incidentResult.time_estimate}</p>
-                          <p><strong>Escalation Tier:</strong> {incidentResult.escalation_level}</p>
                         </div>
                       )}
                     </div>
@@ -839,31 +988,31 @@ export default function Home() {
                 {activeTab === "sustainability" && (
                   <div className="space-y-8">
                     
-                    <div className="glass-panel p-6 rounded-2xl">
+                    <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
                       <div className="flex items-center gap-2 mb-4">
-                        <Zap className="w-5 h-5 text-amber-400" />
+                        <Zap className="w-5 h-5 text-amber-500" />
                         <h2 className="text-sm font-bold uppercase tracking-wider">Resource load coordinator</h2>
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
-                          <label htmlFor="sustainability-attendance-input" className="text-xs font-bold text-slate-400 block mb-1">Expected Attendance</label>
+                          <label htmlFor="sustainability-load-attendance" className="text-xs font-bold text-[#6B7280] block mb-1">Expected Attendance</label>
                           <input 
-                            id="sustainability-attendance-input"
+                            id="sustainability-load-attendance"
                             type="number" 
                             value={attendance} 
                             onChange={(e) => setAttendance(Number(e.target.value))}
-                            className="w-full bg-slate-900 border border-slate-800 rounded-lg py-2 px-3 text-sm focus:outline-none"
+                            className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
                           />
                         </div>
                         <div>
-                          <label htmlFor="sustainability-temp-input" className="text-xs font-bold text-slate-400 block mb-1">Target Temperature (°C)</label>
+                          <label htmlFor="sustainability-load-temp" className="text-xs font-bold text-[#6B7280] block mb-1">Target Temperature (°C)</label>
                           <input 
-                            id="sustainability-temp-input"
+                            id="sustainability-load-temp"
                             type="number" 
                             value={temp} 
                             onChange={(e) => setTemp(Number(e.target.value))}
-                            className="w-full bg-slate-900 border border-slate-800 rounded-lg py-2 px-3 text-sm focus:outline-none"
+                            className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
                           />
                         </div>
                       </div>
@@ -871,48 +1020,31 @@ export default function Home() {
                       <button 
                         onClick={handleSustainabilityPredict}
                         disabled={loading}
-                        className="w-full py-2.5 bg-amber-600 hover:bg-amber-700 transition rounded-lg text-xs font-bold uppercase tracking-wider"
+                        className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white transition rounded-lg text-xs font-bold uppercase tracking-wider"
                       >
                         Forecast resource loads
                       </button>
 
                       {sustainabilityResult && (
-                        <div className="mt-6 p-4 bg-slate-900/60 border border-slate-800 rounded-xl text-xs grid grid-cols-2 md:grid-cols-4 gap-4 text-slate-350">
+                        <div className="mt-6 p-4 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-xs grid grid-cols-2 md:grid-cols-4 gap-4 text-slate-700">
                           <div>
-                            <span className="text-slate-450 block">Electricity Forecast</span>
-                            <strong className="text-lg text-slate-100">{sustainabilityResult.electricity_mwh_est} MWh</strong>
+                            <span className="text-[#6B7280] block">Electricity Forecast</span>
+                            <strong className="text-lg text-[#111827]">{sustainabilityResult.electricity_mwh_est} MWh</strong>
                           </div>
                           <div>
-                            <span className="text-slate-450 block">Water Consumption</span>
-                            <strong className="text-lg text-slate-100">{sustainabilityResult.water_liters_est.toLocaleString()} L</strong>
+                            <span className="text-[#6B7280] block">Water Consumption</span>
+                            <strong className="text-lg text-[#111827]">{sustainabilityResult.water_liters_est.toLocaleString()} L</strong>
                           </div>
                           <div>
-                            <span className="text-slate-450 block">Trash Yield</span>
-                            <strong className="text-lg text-slate-100">{sustainabilityResult.waste_tons_est} Tons</strong>
+                            <span className="text-[#6B7280] block">Trash Yield</span>
+                            <strong className="text-lg text-[#111827]">{sustainabilityResult.waste_tons_est} Tons</strong>
                           </div>
                           <div>
-                            <span className="text-slate-450 block">Food Demand Forecast</span>
-                            <strong className="text-lg text-slate-100">{sustainabilityResult.food_demand_units_est.toLocaleString()} units</strong>
+                            <span className="text-[#6B7280] block">Food Demand Forecast</span>
+                            <strong className="text-lg text-[#111827]">{sustainabilityResult.food_demand_units_est.toLocaleString()} units</strong>
                           </div>
                         </div>
                       )}
-                    </div>
-
-                    {/* Historical line chart with forecast overlay */}
-                    <div className="glass-panel p-6 rounded-2xl">
-                      <h3 className="text-xs font-bold text-slate-200 mb-4">Electricity Load Forecasting Overlay</h3>
-                      <div className="h-60">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={resourceForecastData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
-                            <XAxis dataKey="hour" stroke="#475569" fontSize={10} />
-                            <YAxis stroke="#475569" fontSize={10} />
-                            <Tooltip contentStyle={{ backgroundColor: "#090d16", borderColor: "rgba(255,255,255,0.08)" }} />
-                            <Line type="monotone" dataKey="Actual" stroke="#f59e0b" strokeWidth={2.5} />
-                            <Line type="monotone" dataKey="Forecast" stroke="#475569" strokeWidth={1.5} strokeDasharray="5 5" />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
                     </div>
 
                   </div>
@@ -920,49 +1052,49 @@ export default function Home() {
 
                 {/* E. VOLUNTEER AI SUPPORT TAB */}
                 {activeTab === "volunteer" && (
-                  <div className="glass-panel p-6 rounded-2xl">
+                  <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
                     <div className="flex items-center gap-2 mb-4">
-                      <Users className="w-5 h-5 text-emerald-400" />
-                      <h2 className="text-sm font-bold uppercase tracking-wider text-slate-200">Volunteer Resource Dispatch Console</h2>
+                      <Users className="w-5 h-5 text-emerald-600" />
+                      <h2 className="text-sm font-bold uppercase tracking-wider text-[#111827]">Volunteer Resource Dispatch Console</h2>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 mb-4">
                       <div>
-                        <label htmlFor="volunteer-badge-input" className="text-xs font-bold text-slate-400 block mb-1">Badge Reference ID</label>
+                        <label htmlFor="volunteer-badge-ref" className="text-xs font-bold text-[#6B7280] block mb-1">Badge Reference ID</label>
                         <input 
-                          id="volunteer-badge-input"
+                          id="volunteer-badge-ref"
                           type="text" 
                           value={volunteerId} 
                           onChange={(e) => setVolunteerId(e.target.value)}
-                          className="w-full bg-slate-900 border border-slate-800 rounded-lg py-2 px-3 text-sm focus:outline-none"
+                          className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
                         />
                       </div>
                       <div>
-                        <label htmlFor="volunteer-sector-input" className="text-xs font-bold text-slate-400 block mb-1">Sector coordinates</label>
+                        <label htmlFor="volunteer-coordinates-sector" className="text-xs font-bold text-[#6B7280] block mb-1">Sector coordinates</label>
                         <input 
-                          id="volunteer-sector-input"
+                          id="volunteer-coordinates-sector"
                           type="text" 
                           value={volunteerLoc} 
                           onChange={(e) => setVolunteerLoc(e.target.value)}
-                          className="w-full bg-slate-900 border border-slate-800 rounded-lg py-2 px-3 text-sm focus:outline-none"
+                          className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
                         />
                       </div>
                     </div>
 
                     <div className="mb-4">
-                      <label htmlFor="volunteer-ask-query-input" className="text-xs font-bold text-slate-400 block mb-1">Query input</label>
+                      <label htmlFor="volunteer-query-input" className="text-xs font-bold text-[#6B7280] block mb-1">Query input</label>
                       <div className="flex gap-2">
                         <input 
-                          id="volunteer-ask-query-input"
+                          id="volunteer-query-input"
                           type="text" 
                           value={volunteerQuery} 
                           onChange={(e) => setVolunteerQuery(e.target.value)}
-                          className="flex-1 bg-slate-900 border border-slate-800 rounded-lg py-2.5 px-3 text-sm focus:outline-none text-slate-100"
+                          className="flex-1 bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2.5 px-3 text-sm outline-none text-[#111827]"
                         />
                         <button 
                           onClick={() => handleVolunteerAsk()}
-                          aria-label="Submit Volunteer Query"
-                          className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white text-xs font-bold uppercase tracking-wider"
+                          aria-label="Dispatch query to volunteer database"
+                          className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg"
                         >
                           Dispatch
                         </button>
@@ -970,10 +1102,10 @@ export default function Home() {
                     </div>
 
                     {volunteerResult && (
-                      <div className="p-4 bg-emerald-950/20 border border-emerald-500/20 rounded-xl text-xs space-y-2">
-                        <p className="text-emerald-400 font-bold">Target sector allocation: {volunteerResult.assigned_zone}</p>
-                        <p className="text-slate-350">Action description: {volunteerResult.task_description}</p>
-                        <p className="text-slate-400">Risk category: {volunteerResult.urgency_level}</p>
+                      <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-xs space-y-2">
+                        <p className="text-emerald-700 font-bold">Target sector allocation: {volunteerResult.assigned_zone}</p>
+                        <p className="text-slate-700">Action description: {volunteerResult.task_description}</p>
+                        <p className="text-slate-500">Risk category: {volunteerResult.urgency_level}</p>
                       </div>
                     )}
                   </div>
@@ -984,6 +1116,22 @@ export default function Home() {
           </main>
 
         </div>
+
+        {/* Footer info bar */}
+        <footer className="border-t border-[#E8ECF4] bg-white py-3.5 text-xs text-[#6B7280]">
+          <div className="max-w-7xl mx-auto px-4 md:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              <span className="font-semibold text-[#111827]">Live Operations</span>
+              <span>• Last updated: 19:03:24 IST</span>
+            </div>
+            <div className="flex gap-6">
+              <span>Sensors: 1,248 Online</span>
+              <span>Avg Response: 120ms</span>
+              <span className="font-semibold text-[#111827]">Data Source: Multi-Channel Fusion</span>
+            </div>
+          </div>
+        </footer>
 
       </div>
     </div>
