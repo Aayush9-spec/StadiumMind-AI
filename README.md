@@ -2,6 +2,30 @@
 
 ### *The AI Operating System for FIFA World Cup 2026 Stadium Operations.*
 
+---
+
+## 🏆 Challenge Submission Details
+
+### 1. Chosen Vertical
+*   **Stadium Operations & Coordinated Intelligence (AI Stadium Operating System)**: Multi-agent orchestrator managing fans, volunteers, police, stadium staff, and emergency medical teams synchronously.
+
+### 2. Approach & Logic
+*   **Dynamic Telemetry Integration**: Rather than static mocks, the system makes live network requests (e.g. keyless weather data from **Open-Meteo API** matching venue coordinates) and updates parameters dynamically using a state-progression clock logic.
+*   **Google GenAI Core**: Utilizes the modern `google-genai` SDK (`google.genai.Client`) to run reasoning chains for emergency routing, incident summarization, and coordinated command dispatch plans.
+*   **Offline Fallbacks**: Includes a secure local fallback mechanism that serves fully-formed mock intelligence outputs in case the `GEMINI_API_KEY` is not present, ensuring the app remains fully usable under local offline evaluation.
+
+### 3. How the Solution Works
+1.  **Ingestion & Validation**: Inputs (like voice query transcripts or incident forms) pass through strict Pydantic schema validation and sanitation rules to isolate malicious command sequences.
+2.  **AI Command Decider**: The engine analyzes reports, generates location extractions, risk ratings, ETAs, and suggests pathfinder routes.
+3.  **Real-Time Dashboard & Digital Twin**: The user interface streams operations to a live light-theme control panel showing an interactive SVG-based stadium layout, live incident logs, and approval switches.
+
+### 4. Assumptions Made
+*   *Stadium Location*: Target venue coordinates are configured around SoFi Stadium (latitude `33.9534`, longitude `-118.3392`).
+*   *Network Connectivity*: Backend assumes access to public APIs like Open-Meteo for real-time telemetry updates. If offline, graceful mocked telemetry fallbacks are initiated.
+*   *Security Key*: If `GEMINI_API_KEY` is missing, the system automatically logs a diagnostic warning and shifts to offline reasoning logic rather than crashing.
+
+---
+
 StadiumMind AI is an intelligent stadium operations system coordinating fans, volunteers, police, emergency responders, transit networks, and stadium organizers. Instead of addressing a single siloed problem, StadiumMind AI functions as a central brain that mitigates crowd congestion, automates dispatch pathways during medical alerts, coordinates sustainability outputs, and streamlines post-incident logging.
 
 ---
