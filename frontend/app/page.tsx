@@ -288,7 +288,7 @@ export default function Home() {
         
         {/* Header Block */}
         <header className="border-b border-[#E8ECF4] bg-white sticky top-0 z-50 shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 md:px-8 py-3.5 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="w-full px-4 md:px-8 lg:px-12 py-3.5 flex flex-col md:flex-row items-center justify-between gap-4">
             
             {/* Logo and Brand */}
             <div className="flex items-center gap-3">
@@ -385,7 +385,7 @@ export default function Home() {
         />
 
         {/* Central Layout Grid */}
-        <div className="flex-1 max-w-7xl w-full mx-auto px-4 md:px-8 py-8 flex flex-col lg:flex-row gap-8">
+        <div className="flex-1 w-full px-4 md:px-8 lg:px-12 py-8 flex flex-col lg:flex-row gap-8">
           
           {/* Navigation Tab list */}
           <aside className="w-full lg:w-60 flex-shrink-0">
@@ -1119,7 +1119,7 @@ export default function Home() {
 
         {/* Footer info bar */}
         <footer className="border-t border-[#E8ECF4] bg-white py-3.5 text-xs text-[#6B7280]">
-          <div className="max-w-7xl mx-auto px-4 md:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="w-full px-4 md:px-8 lg:px-12 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
               <span className="font-semibold text-[#111827]">Live Operations</span>
