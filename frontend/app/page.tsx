@@ -282,35 +282,27 @@ export default function Home() {
     <div className={`min-h-screen font-sans transition-all duration-300 ${
       highContrast 
         ? "bg-black text-white selection:bg-yellow-400 selection:text-black" 
-        : "bg-slate-950 text-slate-100 selection:bg-blue-600 selection:text-white"
+        : "bg-[#F7F8FC] text-[#111827] selection:bg-indigo-600 selection:text-white"
     }`}>
       
-      {/* Background Orbs */}
-      {!highContrast && (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-          <div className="absolute top-[-5%] left-[-5%] w-[45%] h-[45%] rounded-full bg-blue-900/15 blur-[160px]" />
-          <div className="absolute bottom-[-5%] right-[-5%] w-[45%] h-[45%] rounded-full bg-indigo-900/15 blur-[160px]" />
-        </div>
-      )}
-
       {/* Main Layout Container */}
       <div className="relative z-10 flex flex-col min-h-screen">
         
         {/* Header Block */}
-        <header className="border-b border-slate-800/80 bg-slate-900/40 backdrop-blur-md sticky top-0 z-50">
+        <header className="border-b border-[#E8ECF4] bg-white sticky top-0 z-50 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 md:px-8 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4">
             
             {/* Logo and Brand */}
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl shadow-lg shadow-blue-500/20">
+              <div className="p-2.5 bg-gradient-to-tr from-indigo-600 to-blue-600 rounded-xl shadow-lg shadow-indigo-500/10">
                 <BrainCircuit className="w-6.5 h-6.5 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-black tracking-tight flex items-center gap-2">
+                <h1 className="text-lg font-black tracking-tight flex items-center gap-2 text-[#111827]">
                   StadiumMind OS
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30 tracking-wider">ENTERPRISE</span>
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600 border border-indigo-200 tracking-wider">ENTERPRISE</span>
                 </h1>
-                <p className="text-[9px] text-slate-400 font-bold tracking-widest uppercase">
+                <p className="text-[9px] text-[#6B7280] font-bold tracking-widest uppercase">
                   FIFA World Cup 2026 Operations
                 </p>
               </div>
@@ -322,16 +314,16 @@ export default function Home() {
               {/* Cmd+K visual label */}
               <button 
                 onClick={() => setIsCommandPaletteOpen(true)}
-                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-950/60 hover:bg-slate-900 text-xs font-semibold text-slate-400 transition"
+                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#E8ECF4] bg-[#F7F8FC] hover:bg-slate-100 text-xs font-semibold text-[#6B7280] transition"
               >
                 <span>Search Console</span>
-                <kbd className="bg-slate-900 border border-slate-700/60 text-[9px] px-1.5 py-0.5 rounded font-bold">⌘K</kbd>
+                <kbd className="bg-white border border-[#E8ECF4] text-[9px] px-1.5 py-0.5 rounded font-bold">⌘K</kbd>
               </button>
 
               <button
                 onClick={() => setHighContrast(!highContrast)}
                 aria-label="Toggle High Contrast Mode"
-                className="p-2 rounded-lg border border-slate-800 bg-slate-950/60 text-slate-400 hover:text-slate-100 transition"
+                className="p-2 rounded-lg border border-[#E8ECF4] bg-white text-[#6B7280] hover:text-[#111827] transition"
               >
                 {highContrast ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
               </button>
@@ -342,7 +334,7 @@ export default function Home() {
                 className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold transition duration-300 text-xs uppercase tracking-wider ${
                   isListening 
                     ? "bg-red-500 text-white animate-pulse" 
-                    : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20"
+                    : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20"
                 }`}
               >
                 {isListening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
@@ -367,8 +359,8 @@ export default function Home() {
         />
 
         {/* Global Warning Bar */}
-        <div className="bg-slate-950/80 border-b border-slate-800/80 py-2 px-4">
-          <div className="max-w-7xl mx-auto flex items-center justify-between text-[11px] font-semibold text-slate-400">
+        <div className="bg-[#F7F8FC] border-b border-[#E8ECF4] py-2 px-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-between text-[11px] font-semibold text-[#6B7280]">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>Dallas Venue Feed: Connected</span>
@@ -390,8 +382,8 @@ export default function Home() {
                 onClick={() => setActiveTab("overview")}
                 className={`flex-shrink-0 flex items-center gap-3 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition ${
                   activeTab === "overview" 
-                    ? "bg-blue-600 text-white" 
-                    : "text-slate-400 hover:bg-slate-900/60 hover:text-slate-100"
+                    ? "bg-[#4F46E5] text-white shadow-sm" 
+                    : "text-[#6B7280] hover:bg-white hover:text-[#111827]"
                 }`}
               >
                 <LayoutDashboard className="w-4 h-4" />
@@ -401,8 +393,8 @@ export default function Home() {
                 onClick={() => setActiveTab("crowd")}
                 className={`flex-shrink-0 flex items-center gap-3 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition ${
                   activeTab === "crowd" 
-                    ? "bg-blue-600 text-white" 
-                    : "text-slate-400 hover:bg-slate-900/60 hover:text-slate-100"
+                    ? "bg-[#4F46E5] text-white shadow-sm" 
+                    : "text-[#6B7280] hover:bg-white hover:text-[#111827]"
                 }`}
               >
                 <Compass className="w-4 h-4" />
@@ -412,8 +404,8 @@ export default function Home() {
                 onClick={() => setActiveTab("emergency")}
                 className={`flex-shrink-0 flex items-center gap-3 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition ${
                   activeTab === "emergency" 
-                    ? "bg-blue-600 text-white" 
-                    : "text-slate-400 hover:bg-slate-900/60 hover:text-slate-100"
+                    ? "bg-[#4F46E5] text-white shadow-sm" 
+                    : "text-[#6B7280] hover:bg-white hover:text-[#111827]"
                 }`}
               >
                 <ShieldAlert className="w-4 h-4" />
@@ -423,8 +415,8 @@ export default function Home() {
                 onClick={() => setActiveTab("sustainability")}
                 className={`flex-shrink-0 flex items-center gap-3 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition ${
                   activeTab === "sustainability" 
-                    ? "bg-blue-600 text-white" 
-                    : "text-slate-400 hover:bg-slate-900/60 hover:text-slate-100"
+                    ? "bg-[#4F46E5] text-white shadow-sm" 
+                    : "text-[#6B7280] hover:bg-white hover:text-[#111827]"
                 }`}
               >
                 <Zap className="w-4 h-4" />
@@ -434,8 +426,8 @@ export default function Home() {
                 onClick={() => setActiveTab("volunteer")}
                 className={`flex-shrink-0 flex items-center gap-3 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition ${
                   activeTab === "volunteer" 
-                    ? "bg-blue-600 text-white" 
-                    : "text-slate-400 hover:bg-slate-900/60 hover:text-slate-100"
+                    ? "bg-[#4F46E5] text-white shadow-sm" 
+                    : "text-[#6B7280] hover:bg-white hover:text-[#111827]"
                 }`}
               >
                 <Users className="w-4 h-4" />
@@ -444,20 +436,20 @@ export default function Home() {
             </nav>
 
             {/* Quick Stats sidebar widget */}
-            <div className="hidden lg:block mt-8 p-4 bg-slate-900/20 border border-slate-900 rounded-2xl space-y-4">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">System Diagnostics</span>
+            <div className="hidden lg:block mt-8 p-4 bg-white border border-[#E8ECF4] rounded-2xl shadow-sm space-y-4">
+              <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-widest block font-sans">System Diagnostics</span>
               <div className="space-y-2 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">GenAI SDK:</span>
-                  <strong className="text-emerald-400">google-genai 2.10</strong>
+                  <span className="text-[#6B7280]">GenAI SDK:</span>
+                  <strong className="text-emerald-600">google-genai 2.10</strong>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Weather API:</span>
-                  <strong className="text-slate-200">Open-Meteo</strong>
+                  <span className="text-[#6B7280]">Weather API:</span>
+                  <strong className="text-[#111827]">Open-Meteo</strong>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Diagnostic Latency:</span>
-                  <strong className="text-slate-200">22ms</strong>
+                  <span className="text-[#6B7280]">Diagnostic Latency:</span>
+                  <strong className="text-[#111827]">22ms</strong>
                 </div>
               </div>
             </div>
