@@ -3,9 +3,9 @@ from typing import List, Optional
 
 # --- Crowd Heatmap Prediction ---
 class CrowdPredictRequest(BaseModel):
-    gate_id: str = Field(..., example="Gate C")
-    current_count: int = Field(..., ge=0, example=4500)
-    flow_rate_per_min: int = Field(..., ge=0, example=150)
+    gate_id: str = Field(..., json_schema_extra={"example": "Gate C"})
+    current_count: int = Field(..., ge=0, json_schema_extra={"example": 4500})
+    flow_rate_per_min: int = Field(..., ge=0, json_schema_extra={"example": 150})
 
 class CrowdPredictResponse(BaseModel):
     gate_id: str
@@ -15,8 +15,8 @@ class CrowdPredictResponse(BaseModel):
 
 # --- AI Route Planner ---
 class RouteRequest(BaseModel):
-    start_location: str = Field(..., example="Section 105")
-    end_location: str = Field(..., example="Gate D")
+    start_location: str = Field(..., json_schema_extra={"example": "Section 105"})
+    end_location: str = Field(..., json_schema_extra={"example": "Gate D"})
     require_wheelchair: bool = Field(default=False)
     require_elevators: bool = Field(default=False)
 
@@ -28,9 +28,9 @@ class RouteResponse(BaseModel):
 
 # --- Volunteer AI ---
 class VolunteerQueryRequest(BaseModel):
-    volunteer_id: str = Field(..., example="VOL-409")
-    current_location: str = Field(..., example="Zone A Corridor")
-    query: str = Field(..., example="Where should I go?")
+    volunteer_id: str = Field(..., json_schema_extra={"example": "VOL-409"})
+    current_location: str = Field(..., json_schema_extra={"example": "Zone A Corridor"})
+    query: str = Field(..., json_schema_extra={"example": "Where should I go?"})
 
 class VolunteerQueryResponse(BaseModel):
     assigned_zone: str
@@ -39,8 +39,8 @@ class VolunteerQueryResponse(BaseModel):
 
 # --- Sustainability AI ---
 class SustainabilityRequest(BaseModel):
-    estimated_attendance: int = Field(..., ge=0, example=65000)
-    temperature_celsius: float = Field(..., example=27.5)
+    estimated_attendance: int = Field(..., ge=0, json_schema_extra={"example": 65000})
+    temperature_celsius: float = Field(..., json_schema_extra={"example": 27.5})
 
 class SustainabilityResponse(BaseModel):
     electricity_mwh_est: float
@@ -50,7 +50,7 @@ class SustainabilityResponse(BaseModel):
 
 # --- Emergency AI ---
 class EmergencyReportRequest(BaseModel):
-    incident_text: str = Field(..., min_length=5, example="Fan collapsed near Section 218")
+    incident_text: str = Field(..., min_length=5, json_schema_extra={"example": "Fan collapsed near Section 218"})
 
 class EmergencyReportResponse(BaseModel):
     extracted_location: str
@@ -61,7 +61,7 @@ class EmergencyReportResponse(BaseModel):
 
 # --- AI Decision Engine ---
 class DecisionTriggerRequest(BaseModel):
-    event_scenario: str = Field(..., example="Heavy rain starts suddenly post-match")
+    event_scenario: str = Field(..., json_schema_extra={"example": "Heavy rain starts suddenly post-match"})
 
 class DecisionTriggerResponse(BaseModel):
     primary_event: str
@@ -71,7 +71,7 @@ class DecisionTriggerResponse(BaseModel):
 
 # --- AI Incident Report Generator ---
 class IncidentGeneratorRequest(BaseModel):
-    staff_raw_text: str = Field(..., min_length=5, example="Fan slipped on wet stairs, minor leg cut, medic applied bandage.")
+    staff_raw_text: str = Field(..., min_length=5, json_schema_extra={"example": "Fan slipped on wet stairs, minor leg cut, medic applied bandage."})
 
 class IncidentReportResponse(BaseModel):
     summary: str
