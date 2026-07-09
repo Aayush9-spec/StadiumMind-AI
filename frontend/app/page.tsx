@@ -306,7 +306,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Top Search bar Console (Mockup layout center) */}
+            {/* Top Search bar Console */}
             <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#E8ECF4] bg-[#F7F8FC] w-72">
               <Search className="w-4 h-4 text-[#6B7280]" />
               <input 
@@ -383,6 +383,20 @@ export default function Home() {
             handleEmergencyReport("Critical security emergency in Sector Plaza A!");
           }}
         />
+
+        {/* Global Warning Bar */}
+        <div className="bg-[#F7F8FC] border-b border-[#E8ECF4] py-2 px-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-between text-[11px] font-semibold text-[#6B7280]">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#4F46E5] animate-pulse" />
+              <span>Dallas Venue Feed: Connected</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <span>Gate A Flow: Optimal</span>
+              <span>Gate C Flow: Heavy Egress</span>
+            </div>
+          </div>
+        </div>
 
         {/* Central Layout Grid */}
         <div className="flex-1 w-full px-4 md:px-8 lg:px-12 py-8 flex flex-col lg:flex-row gap-8">
@@ -467,653 +481,692 @@ export default function Home() {
             </div>
           </aside>
 
-          {/* Core Panel Content */}
-          <main className="flex-1 min-w-0">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.2 }}
-              >
-                
-                {/* A. OVERVIEW COMMAND TAB */}
-                {activeTab === "overview" && (
-                  <div className="space-y-8">
-                    
-                    {/* Top 4 premium metric cards matching mockup layout */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Main layout splitting main panels & right persistent sidebar AI Commander */}
+          <div className="flex-1 min-w-0 grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            {/* Left and Center Content Area (Dynamic depending on active tab) */}
+            <div className="lg:col-span-2 space-y-8">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-8"
+                >
+                  
+                  {/* A. OVERVIEW COMMAND TAB */}
+                  {activeTab === "overview" && (
+                    <div className="space-y-8">
                       
-                      <div className="bg-white border border-[#E8ECF4] p-5 rounded-2xl shadow-sm hover:shadow-md transition duration-300">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Inflow Congestion</span>
-                            <h4 className="text-lg font-black text-[#111827]">{telemetry.crowd_density.value}</h4>
-                            <span className="inline-block mt-2 text-[9px] font-black text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">High Risk</span>
-                            <span className="text-[9px] text-[#6B7280] block mt-1">↑ 18% vs last 15 min</span>
-                          </div>
-                          
-                          {/* Mini Sparkline Chart */}
-                          <div className="w-16 h-10">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <AreaChart data={sparklineDataUp}>
-                                <Area type="monotone" dataKey="val" stroke="#EF4444" fill="rgba(239, 68, 68, 0.05)" strokeWidth={1.5} dot={false} />
-                              </AreaChart>
-                            </ResponsiveContainer>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-white border border-[#E8ECF4] p-5 rounded-2xl shadow-sm hover:shadow-md transition duration-300">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Egress Transit</span>
-                            <h4 className="text-lg font-black text-[#111827]">{telemetry.transport.value}</h4>
-                            <span className="inline-block mt-2 text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">Optimal</span>
-                            <span className="text-[9px] text-[#6B7280] block mt-1">On-time performance</span>
-                          </div>
-                          
-                          {/* Mini Sparkline Chart */}
-                          <div className="w-16 h-10">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <AreaChart data={sparklineDataDown}>
-                                <Area type="monotone" dataKey="val" stroke="#16A34A" fill="rgba(22, 163, 74, 0.05)" strokeWidth={1.5} dot={false} />
-                              </AreaChart>
-                            </ResponsiveContainer>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-white border border-[#E8ECF4] p-5 rounded-2xl shadow-sm hover:shadow-md transition duration-300">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Environmental</span>
-                            <h4 className="text-lg font-black text-[#111827]">{telemetry.weather.value}</h4>
-                            <span className="inline-block mt-2 text-[9px] font-black text-blue-600 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded">Clear</span>
-                            <span className="text-[9px] text-[#6B7280] block mt-1">Wind 10.8 km/h</span>
-                          </div>
-                          <CloudRain className="w-6 h-6 text-blue-500" />
-                        </div>
-                      </div>
-
-                      <div className="bg-white border border-[#E8ECF4] p-5 rounded-2xl shadow-sm hover:shadow-md transition duration-300">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Live Attendance</span>
-                            <h4 className="text-lg font-black text-[#111827]">62,845</h4>
-                            <span className="inline-block mt-2 text-[9px] font-black text-[#4F46E5] bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded">↑ 1,245 today</span>
-                            <span className="text-[9px] text-[#6B7280] block mt-1">Capacity: 78%</span>
-                          </div>
-                          <Users className="w-6 h-6 text-[#4F46E5]" />
-                        </div>
-                      </div>
-
-                    </div>
-
-                    {/* Middle grid: Digital Twin on Left, AI Insights / Right sidebar AI Commander */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                      
-                      {/* Left and center modules */}
-                      <div className="lg:col-span-2 space-y-8">
+                      {/* Top 4 premium metric cards */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         
-                        {/* Digital Twin */}
-                        <DigitalTwin
-                          stadiumName="SoFi Stadium"
-                          gateStatus={{
-                            "Gate A": { count: 3400, status: "MEDIUM", percentage: 72 },
-                            "Gate B": { count: 2100, status: "NORMAL", percentage: 48 },
-                            "Gate C": { count: 4800, status: "HIGH", percentage: 92 },
-                            "Gate D": { count: 1800, status: "MEDIUM", percentage: 61 },
-                            "Gate E": { count: 1200, status: "NORMAL", percentage: 35 }
-                          }}
-                          onSelectNode={(gateKey) => {
-                            setGateId(gateKey);
-                            handleCrowdPredict();
-                          }}
-                        />
-
-                        {/* Crowd Flow vs Forecast Chart */}
-                        <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
-                          <div className="flex justify-between items-center mb-4">
+                        <div className="bg-white border border-[#E8ECF4] p-5 rounded-2xl shadow-sm hover:shadow-md transition duration-300">
+                          <div className="flex justify-between items-start">
                             <div>
-                              <h3 className="text-xs font-bold text-[#111827]">Crowd Flow vs Forecast</h3>
-                              <p className="text-[10px] text-[#6B7280] uppercase tracking-wider">Real-time simulation overlay</p>
+                              <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Inflow Congestion</span>
+                              <h4 className="text-lg font-black text-[#111827]">{telemetry.crowd_density.value}</h4>
+                              <span className="inline-block mt-2 text-[9px] font-black text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">High Risk</span>
+                              <span className="text-[9px] text-[#6B7280] block mt-1">↑ 18% vs last 15 min</span>
                             </div>
-                            <span className="text-[10px] bg-[#F7F8FC] border border-[#E8ECF4] text-[#6B7280] px-2 py-0.5 rounded font-bold uppercase">Real-time</span>
+                            <div className="w-16 h-10">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={sparklineDataUp}>
+                                  <Area type="monotone" dataKey="val" stroke="#EF4444" fill="rgba(239, 68, 68, 0.05)" strokeWidth={1.5} dot={false} />
+                                </AreaChart>
+                              </ResponsiveContainer>
+                            </div>
                           </div>
-                          <div className="h-64">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <AreaChart data={crowdTrendData}>
-                                <defs>
-                                  <linearGradient id="colorFlow" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.2}/>
-                                    <stop offset="95%" stopColor="#4F46E5" stopOpacity={0}/>
-                                  </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
-                                <XAxis dataKey="time" stroke="#6B7280" fontSize={10} />
-                                <YAxis stroke="#6B7280" fontSize={10} />
-                                <Tooltip contentStyle={{ backgroundColor: "#FFFFFF", borderColor: "#E8ECF4" }} />
-                                <Area type="monotone" dataKey="Flow" stroke="#4F46E5" strokeWidth={2.5} fillOpacity={1} fill="url(#colorFlow)" />
-                                <Line type="monotone" dataKey="Forecast" stroke="#94A3B8" strokeWidth={1.5} strokeDasharray="5 5" dot={false} />
-                              </AreaChart>
-                            </ResponsiveContainer>
+                        </div>
+
+                        <div className="bg-white border border-[#E8ECF4] p-5 rounded-2xl shadow-sm hover:shadow-md transition duration-300">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Egress Transit</span>
+                              <h4 className="text-lg font-black text-[#111827]">{telemetry.transport.value}</h4>
+                              <span className="inline-block mt-2 text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">Optimal</span>
+                              <span className="text-[9px] text-[#6B7280] block mt-1">On-time performance</span>
+                            </div>
+                            <div className="w-16 h-10">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={sparklineDataDown}>
+                                  <Area type="monotone" dataKey="val" stroke="#16A34A" fill="rgba(22, 163, 74, 0.05)" strokeWidth={1.5} dot={false} />
+                                </AreaChart>
+                              </ResponsiveContainer>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-white border border-[#E8ECF4] p-5 rounded-2xl shadow-sm hover:shadow-md transition duration-300">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Environmental</span>
+                              <h4 className="text-lg font-black text-[#111827]">{telemetry.weather.value}</h4>
+                              <span className="inline-block mt-2 text-[9px] font-black text-blue-600 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded">Clear</span>
+                              <span className="text-[9px] text-[#6B7280] block mt-1">Wind 10.8 km/h</span>
+                            </div>
+                            <CloudRain className="w-6 h-6 text-blue-500" />
+                          </div>
+                        </div>
+
+                        <div className="bg-white border border-[#E8ECF4] p-5 rounded-2xl shadow-sm hover:shadow-md transition duration-300">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Live Attendance</span>
+                              <h4 className="text-lg font-black text-[#111827]">62,845</h4>
+                              <span className="inline-block mt-2 text-[9px] font-black text-[#4F46E5] bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded">↑ 1,245 today</span>
+                              <span className="text-[9px] text-[#6B7280] block mt-1">Capacity: 78%</span>
+                            </div>
+                            <Users className="w-6 h-6 text-[#4F46E5]" />
                           </div>
                         </div>
 
                       </div>
 
-                      {/* Right sidebar AI Commander Panel */}
-                      <div className="space-y-8">
-                        
-                        <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm space-y-6">
-                          <div className="flex justify-between items-center pb-4 border-b border-[#E8ECF4]">
-                            <div className="flex items-center gap-2">
-                              <BrainCircuit className="w-5 h-5 text-[#4F46E5]" />
-                              <h3 className="text-sm font-bold text-[#111827]">AI Commander</h3>
-                            </div>
-                            <span className="text-[9px] bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                              Online
-                            </span>
-                          </div>
+                      {/* Digital Twin */}
+                      <DigitalTwin
+                        stadiumName="SoFi Stadium"
+                        gateStatus={{
+                          "Gate A": { count: 3400, status: "MEDIUM", percentage: 72 },
+                          "Gate B": { count: 2100, status: "NORMAL", percentage: 48 },
+                          "Gate C": { count: 4800, status: "HIGH", percentage: 92 },
+                          "Gate D": { count: 1800, status: "MEDIUM", percentage: 61 },
+                          "Gate E": { count: 1200, status: "NORMAL", percentage: 35 }
+                        }}
+                        onSelectNode={(gateKey) => {
+                          setGateId(gateKey);
+                          setRouteEnd(gateKey);
+                          handleCrowdPredict();
+                        }}
+                      />
 
-                          {/* Match clock */}
-                          <div className="p-4 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl flex justify-between items-center">
-                            <div>
-                              <p className="text-[10px] text-[#6B7280] uppercase tracking-wider font-semibold">Current Match</p>
-                              <strong className="text-xs text-[#111827]">Mexico vs Japan</strong>
-                              <p className="text-[9px] text-[#6B7280]">Group Stage • Match 24</p>
-                            </div>
-                            <span className="bg-red-500 text-white text-[11px] font-black px-2 py-1 rounded">
-                              45:32
-                            </span>
-                          </div>
-
-                          {/* Critical Alerts */}
-                          <div className="space-y-3">
-                            <div className="flex justify-between text-[10px] font-bold text-[#6B7280] uppercase">
-                              <span>Critical Alerts</span>
-                              <span className="text-red-500 bg-red-50 px-1.5 py-0.5 rounded font-black">3</span>
-                            </div>
-
-                            <div className="p-3 bg-red-50/50 border border-red-100 rounded-xl space-y-1">
-                              <p className="text-xs font-bold text-red-700">Gate C Overcrowding</p>
-                              <p className="text-[10px] text-red-600">Risk Level: High</p>
-                            </div>
-                            
-                            <div className="p-3 bg-amber-50/50 border border-amber-100 rounded-xl space-y-1">
-                              <p className="text-xs font-bold text-amber-700">Heavy Rain Incoming</p>
-                              <p className="text-[10px] text-amber-600">ETA: 32 minutes</p>
-                            </div>
-                          </div>
-
-                          {/* AI Recommended Actions checklist */}
-                          <div className="space-y-3">
-                            <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-widest block">AI Recommended Actions</span>
-                            
-                            <div className="space-y-2">
-                              {Object.keys(approvals).map((actName) => {
-                                const details = approvals[actName];
-                                return (
-                                  <div key={actName} className="p-3 bg-white border border-[#E8ECF4] rounded-xl flex items-center justify-between shadow-sm">
-                                    <div>
-                                      <strong className="text-xs text-[#111827]">{actName}</strong>
-                                      <p className="text-[9px] text-[#6B7280]">Impact: {details.impact} • {details.confidence} confidence</p>
-                                    </div>
-                                    
-                                    <div>
-                                      {details.status === "PENDING" ? (
-                                        <button 
-                                          onClick={() => handleActionApproval(actName, "APPROVED")}
-                                          className="py-1 px-3 bg-[#4F46E5] hover:bg-indigo-700 text-white rounded text-[10px] font-bold uppercase transition"
-                                        >
-                                          Approve
-                                        </button>
-                                      ) : (
-                                        <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded uppercase">
-                                          Approved
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-
-                            <button 
-                              onClick={() => {
-                                Object.keys(approvals).forEach(k => handleActionApproval(k, "APPROVED"));
-                              }}
-                              className="w-full mt-2 py-2 bg-[#4F46E5] hover:bg-indigo-700 text-white transition rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm"
-                            >
-                              Approve All Recommendations
-                            </button>
-                          </div>
-
-                          {/* Commander Query Input */}
-                          <div className="border-t border-[#E8ECF4] pt-4">
-                            <label htmlFor="commander-ask-input" className="sr-only">Ask StadiumMind AI</label>
-                            <div className="flex gap-2">
-                              <input 
-                                id="commander-ask-input"
-                                type="text"
-                                placeholder="Ask StadiumMind AI..."
-                                className="flex-1 bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-xs outline-none text-[#111827] placeholder-[#6B7280]"
-                              />
-                              <button 
-                                aria-label="Send Query"
-                                className="p-2 bg-[#F7F8FC] border border-[#E8ECF4] hover:bg-slate-100 rounded-lg"
-                              >
-                                <Send className="w-3.5 h-3.5 text-[#6B7280]" />
-                              </button>
-                            </div>
-                          </div>
-
-                        </div>
-
-                        {/* AI Insights List */}
-                        <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
-                          <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-xs font-bold text-[#111827]">AI Insights</h3>
-                            <span className="w-2 h-2 rounded-full bg-[#16A34A] animate-pulse" />
-                          </div>
-
-                          <div className="space-y-3.5 text-xs">
-                            <div className="flex justify-between items-center">
-                              <span className="text-[#111827] font-semibold">Gate C congestion increasing</span>
-                              <span className="text-[9px] text-[#6B7280]">2 min ago</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-[#111827] font-semibold">Rain probability in 30 mins</span>
-                              <span className="text-[9px] text-[#6B7280]">5 min ago</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-[#111827] font-semibold">Spanish help requests</span>
-                              <span className="text-[9px] text-[#6B7280]">7 min ago</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-[#111827] font-semibold">Waste collection behind</span>
-                              <span className="text-[9px] text-[#6B7280]">10 min ago</span>
-                            </div>
-                          </div>
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                    {/* Bottom row: Incident Log Timeline & 6 metric pills */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                      
-                      {/* Live Incident Timeline list */}
-                      <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm lg:col-span-2">
+                      {/* Crowd Flow vs Forecast Chart */}
+                      <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
                         <div className="flex justify-between items-center mb-4">
-                          <h3 className="text-xs font-bold text-[#111827]">Live Incident Timeline</h3>
-                          <button className="text-[10px] text-[#4F46E5] font-bold hover:underline">View All</button>
+                          <div>
+                            <h3 className="text-xs font-bold text-[#111827]">Crowd Flow vs Forecast</h3>
+                            <p className="text-[10px] text-[#6B7280] uppercase tracking-wider">Real-time simulation overlay</p>
+                          </div>
+                          <span className="text-[10px] bg-[#F7F8FC] border border-[#E8ECF4] text-[#6B7280] px-2 py-0.5 rounded font-bold uppercase">Real-time</span>
+                        </div>
+                        <div className="h-64">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={crowdTrendData}>
+                              <defs>
+                                <linearGradient id="colorFlow" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.2}/>
+                                  <stop offset="95%" stopColor="#4F46E5" stopOpacity={0}/>
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                              <XAxis dataKey="time" stroke="#6B7280" fontSize={10} />
+                              <YAxis stroke="#6B7280" fontSize={10} />
+                              <Tooltip contentStyle={{ backgroundColor: "#FFFFFF", borderColor: "#E8ECF4" }} />
+                              <Area type="monotone" dataKey="Flow" stroke="#4F46E5" strokeWidth={2.5} fillOpacity={1} fill="url(#colorFlow)" />
+                              <Line type="monotone" dataKey="Forecast" stroke="#94A3B8" strokeWidth={1.5} strokeDasharray="5 5" dot={false} />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+
+                    </div>
+                  )}
+
+                  {/* B. DIGITAL TWIN COMMAND TAB */}
+                  {activeTab === "crowd" && (
+                    <div className="space-y-8">
+                      
+                      <DigitalTwin
+                        stadiumName="SoFi Stadium"
+                        gateStatus={{
+                          "Gate A": { count: 3400, status: "MEDIUM", percentage: 72 },
+                          "Gate B": { count: 2100, status: "NORMAL", percentage: 48 },
+                          "Gate C": { count: 4800, status: "HIGH", percentage: 92 },
+                          "Gate D": { count: 1800, status: "MEDIUM", percentage: 61 },
+                          "Gate E": { count: 1200, status: "NORMAL", percentage: 35 }
+                        }}
+                        onSelectNode={(gateKey) => {
+                          setGateId(gateKey);
+                          setRouteEnd(gateKey);
+                          handleCrowdPredict();
+                        }}
+                      />
+
+                      {/* Routing logic pathfinder */}
+                      <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Compass className="w-5 h-5 text-[#4F46E5]" />
+                          <h2 className="text-sm font-bold uppercase tracking-wider">AI Pathfinding Navigation Coordinator</h2>
                         </div>
                         
-                        <div className="space-y-4 max-h-60 overflow-y-auto">
-                          {timeline.map((evt) => (
-                            <div key={evt.id} className="relative pl-4 border-l border-[#E8ECF4] text-xs">
-                              <span className="absolute top-1 left-[-4px] w-2 h-2 rounded-full bg-[#4F46E5]" />
-                              <div className="flex justify-between text-[10px] text-[#6B7280] font-bold mb-0.5">
-                                <span>{evt.title}</span>
-                                <span>{evt.time}</span>
-                              </div>
-                              <p className="text-[11px] text-[#6B7280] leading-relaxed">{evt.detail}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* 6 Bottom Metric pills */}
-                      <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm space-y-4">
-                        <h3 className="text-xs font-bold text-[#111827] mb-2">Resource Deployments</h3>
-                        
-                        <div className="grid grid-cols-2 gap-3 text-xs">
-                          <div className="p-3 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-center">
-                            <span className="text-[9px] text-[#6B7280] block font-semibold uppercase">Active Volunteers</span>
-                            <strong className="text-sm text-[#111827]">1,248</strong>
-                          </div>
-                          <div className="p-3 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-center">
-                            <span className="text-[9px] text-[#6B7280] block font-semibold uppercase">Medical Teams</span>
-                            <strong className="text-sm text-[#111827]">24</strong>
-                          </div>
-                          <div className="p-3 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-center">
-                            <span className="text-[9px] text-[#6B7280] block font-semibold uppercase">Shuttle Buses</span>
-                            <strong className="text-sm text-[#111827]">78</strong>
-                          </div>
-                          <div className="p-3 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-center">
-                            <span className="text-[9px] text-[#6B7280] block font-semibold uppercase">Parking Occupancy</span>
-                            <strong className="text-sm text-[#111827]">89%</strong>
-                          </div>
-                          <div className="p-3 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-center">
-                            <span className="text-[9px] text-[#6B7280] block font-semibold uppercase">Energy Usage</span>
-                            <strong className="text-sm text-[#111827]">72%</strong>
-                          </div>
-                          <div className="p-3 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-center">
-                            <span className="text-[9px] text-[#6B7280] block font-semibold uppercase">Waste Collected</span>
-                            <strong className="text-sm text-[#111827]">4.2 tons</strong>
-                          </div>
-                        </div>
-                      </div>
-
-                    </div>
-
-                  </div>
-                )}
-
-                {/* B. DIGITAL TWIN COMMAND TAB */}
-                {activeTab === "crowd" && (
-                  <div className="space-y-8">
-                    
-                    <DigitalTwin
-                      stadiumName="SoFi Stadium"
-                      gateStatus={{
-                        "Gate A": { count: 3400, status: "MEDIUM", percentage: 72 },
-                        "Gate B": { count: 2100, status: "NORMAL", percentage: 48 },
-                        "Gate C": { count: 4800, status: "HIGH", percentage: 92 },
-                        "Gate D": { count: 1800, status: "MEDIUM", percentage: 61 },
-                        "Gate E": { count: 1200, status: "NORMAL", percentage: 35 }
-                      }}
-                      onSelectNode={(gateKey) => {
-                        setGateId(gateKey);
-                        handleCrowdPredict();
-                      }}
-                    />
-
-                    {/* Routing logic pathfinder */}
-                    <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
-                      <div className="flex items-center gap-2 mb-4">
-                        <Compass className="w-5 h-5 text-[#4F46E5]" />
-                        <h2 className="text-sm font-bold uppercase tracking-wider">AI Pathfinding Navigation Coordinator</h2>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <label htmlFor="route-start-input" className="text-xs font-bold text-[#6B7280] block mb-1">Starting Location Sector</label>
-                          <input 
-                            id="route-start-input"
-                            type="text" 
-                            value={routeStart} 
-                            onChange={(e) => setRouteStart(e.target.value)}
-                            className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
-                          />
-                        </div>
-                        <div>
-                          <label htmlFor="route-end-input" className="text-xs font-bold text-[#6B7280] block mb-1">Egress target Gate</label>
-                          <input 
-                            id="route-end-input"
-                            type="text" 
-                            value={routeEnd} 
-                            onChange={(e) => setRouteEnd(e.target.value)}
-                            className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex gap-6 mb-4">
-                        <label className="flex items-center gap-2 text-xs font-bold text-[#111827] cursor-pointer">
-                          <input 
-                            type="checkbox" 
-                            checked={wheelchair} 
-                            onChange={(e) => setWheelchair(e.target.checked)}
-                            className="rounded border-[#E8ECF4] bg-[#F7F8FC] text-[#4F46E5]"
-                          />
-                          Wheelchair Access Required
-                        </label>
-                        <label className="flex items-center gap-2 text-xs font-bold text-[#111827] cursor-pointer">
-                          <input 
-                            type="checkbox" 
-                            checked={elevator} 
-                            onChange={(e) => setElevator(e.target.checked)}
-                            className="rounded border-[#E8ECF4] bg-[#F7F8FC] text-[#4F46E5]"
-                          />
-                          Elevators prioritize
-                        </label>
-                      </div>
-
-                      <button 
-                        onClick={handleRoutePlan}
-                        disabled={loading}
-                        className="w-full py-2.5 bg-[#4F46E5] hover:bg-indigo-700 transition rounded-lg text-xs font-bold text-white uppercase tracking-wider"
-                      >
-                        Map safest route coordinates
-                      </button>
-
-                      {routeResult && (
-                        <div className="mt-6 p-4 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-xs space-y-1">
-                          <p><strong>Computed Pathway:</strong> {routeResult.path.join(" ➔ ")}</p>
-                          <p><strong>ETA:</strong> {routeResult.estimated_minutes} minutes</p>
-                        </div>
-                      )}
-                    </div>
-
-                  </div>
-                )}
-
-                {/* C. EMERGENCY TAB */}
-                {activeTab === "emergency" && (
-                  <div className="space-y-8">
-                    
-                    <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm border-l-4 border-l-red-500">
-                      <div className="flex items-center gap-2 mb-4 text-red-600">
-                        <ShieldAlert className="w-5 h-5 animate-pulse" />
-                        <h2 className="text-sm font-bold uppercase tracking-wider">Rescue EMS Dispatcher Console</h2>
-                      </div>
-                      
-                      <div className="mb-4">
-                        <label htmlFor="emergency-radio-alert-input" className="text-xs font-bold text-[#6B7280] block mb-1">Radio Alert Transcript (Live Feed)</label>
-                        <textarea 
-                          id="emergency-radio-alert-input"
-                          rows={3}
-                          value={emergencyText} 
-                          onChange={(e) => setEmergencyText(e.target.value)}
-                          className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
-                        />
-                      </div>
-
-                      <button 
-                        onClick={() => handleEmergencyReport()}
-                        disabled={loading}
-                        className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white transition rounded-lg text-xs font-bold uppercase tracking-wider"
-                      >
-                        Dispatch rescue teams
-                      </button>
-
-                      {emergencyResult && (
-                        <div className="mt-6 p-4 bg-red-50 border border-red-100 rounded-xl text-xs">
-                          <div className="grid grid-cols-2 gap-4 mb-3">
-                            <div>
-                              <span className="text-[#6B7280] block uppercase tracking-wider text-[10px]">Extracted Coordinates</span>
-                              <strong className="text-red-700 text-sm">{emergencyResult.extracted_location}</strong>
-                            </div>
-                            <div>
-                              <span className="text-[#6B7280] block uppercase tracking-wider text-[10px]">Risk Tier</span>
-                              <span className="px-2 py-0.5 rounded text-[10px] font-black bg-red-600 text-white animate-pulse">
-                                {emergencyResult.severity}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="space-y-1.5 border-t border-red-200 pt-3 text-slate-700">
-                            <p><strong>Dispatched Team:</strong> {emergencyResult.dispatched_unit}</p>
-                            <p><strong>Cleared Route:</strong> {emergencyResult.suggested_route}</p>
-                            <p><strong>Expected Arrival:</strong> {emergencyResult.eta_minutes} mins</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
-                      <div className="flex items-center gap-2 mb-4">
-                        <FileText className="w-5 h-5 text-teal-600" />
-                        <h2 className="text-sm font-bold uppercase tracking-wider">AI Incident Report Compiler</h2>
-                      </div>
-                      
-                      <div className="mb-4">
-                        <label htmlFor="incident-radio-log-input" className="text-xs font-bold text-[#6B7280] block mb-1">Raw radio log text</label>
-                        <textarea 
-                          id="incident-radio-log-input"
-                          rows={3}
-                          value={rawIncidentText} 
-                          onChange={(e) => setRawIncidentText(e.target.value)}
-                          className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
-                        />
-                      </div>
-
-                      <button 
-                        onClick={handleGenerateIncident}
-                        disabled={loading}
-                        className="w-full py-2.5 bg-teal-600 hover:bg-teal-700 text-white transition rounded-lg text-xs font-bold uppercase tracking-wider"
-                      >
-                        Compile formal incident record
-                      </button>
-
-                      {incidentResult && (
-                        <div className="mt-6 p-4 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-xs space-y-3 text-slate-700">
-                          <p><strong>Summary:</strong> {incidentResult.summary}</p>
-                          <p><strong>Severity Rating:</strong> {incidentResult.severity}</p>
-                          <p><strong>Remediation:</strong> {incidentResult.recommended_action}</p>
-                          <p><strong>Gear Required:</strong> {incidentResult.resources_required.join(", ")}</p>
-                          <p><strong>Resolution ETA:</strong> {incidentResult.time_estimate}</p>
-                        </div>
-                      )}
-                    </div>
-
-                  </div>
-                )}
-
-                {/* D. SUSTAINABILITY TAB */}
-                {activeTab === "sustainability" && (
-                  <div className="space-y-8">
-                    
-                    <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
-                      <div className="flex items-center gap-2 mb-4">
-                        <Zap className="w-5 h-5 text-amber-500" />
-                        <h2 className="text-sm font-bold uppercase tracking-wider">Resource load coordinator</h2>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <label htmlFor="sustainability-load-attendance" className="text-xs font-bold text-[#6B7280] block mb-1">Expected Attendance</label>
-                          <input 
-                            id="sustainability-load-attendance"
-                            type="number" 
-                            value={attendance} 
-                            onChange={(e) => setAttendance(Number(e.target.value))}
-                            className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
-                          />
-                        </div>
-                        <div>
-                          <label htmlFor="sustainability-load-temp" className="text-xs font-bold text-[#6B7280] block mb-1">Target Temperature (°C)</label>
-                          <input 
-                            id="sustainability-load-temp"
-                            type="number" 
-                            value={temp} 
-                            onChange={(e) => setTemp(Number(e.target.value))}
-                            className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
-                          />
-                        </div>
-                      </div>
-
-                      <button 
-                        onClick={handleSustainabilityPredict}
-                        disabled={loading}
-                        className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white transition rounded-lg text-xs font-bold uppercase tracking-wider"
-                      >
-                        Forecast resource loads
-                      </button>
-
-                      {sustainabilityResult && (
-                        <div className="mt-6 p-4 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-xs grid grid-cols-2 md:grid-cols-4 gap-4 text-slate-700">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                           <div>
-                            <span className="text-[#6B7280] block">Electricity Forecast</span>
-                            <strong className="text-lg text-[#111827]">{sustainabilityResult.electricity_mwh_est} MWh</strong>
+                            <label htmlFor="route-start-tab" className="text-xs font-bold text-[#6B7280] block mb-1">Starting Location Sector</label>
+                            <input 
+                              id="route-start-tab"
+                              type="text" 
+                              value={routeStart} 
+                              onChange={(e) => setRouteStart(e.target.value)}
+                              className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
+                            />
                           </div>
                           <div>
-                            <span className="text-[#6B7280] block">Water Consumption</span>
-                            <strong className="text-lg text-[#111827]">{sustainabilityResult.water_liters_est.toLocaleString()} L</strong>
-                          </div>
-                          <div>
-                            <span className="text-[#6B7280] block">Trash Yield</span>
-                            <strong className="text-lg text-[#111827]">{sustainabilityResult.waste_tons_est} Tons</strong>
-                          </div>
-                          <div>
-                            <span className="text-[#6B7280] block">Food Demand Forecast</span>
-                            <strong className="text-lg text-[#111827]">{sustainabilityResult.food_demand_units_est.toLocaleString()} units</strong>
+                            <label htmlFor="route-end-tab" className="text-xs font-bold text-[#6B7280] block mb-1">Egress target Gate</label>
+                            <input 
+                              id="route-end-tab"
+                              type="text" 
+                              value={routeEnd} 
+                              onChange={(e) => setRouteEnd(e.target.value)}
+                              className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
+                            />
                           </div>
                         </div>
-                      )}
-                    </div>
 
-                  </div>
-                )}
+                        <div className="flex gap-6 mb-4">
+                          <label className="flex items-center gap-2 text-xs font-bold text-[#111827] cursor-pointer">
+                            <input 
+                              type="checkbox" 
+                              checked={wheelchair} 
+                              onChange={(e) => setWheelchair(e.target.checked)}
+                              className="rounded border-[#E8ECF4] bg-[#F7F8FC] text-[#4F46E5]"
+                            />
+                            Wheelchair Access Required
+                          </label>
+                          <label className="flex items-center gap-2 text-xs font-bold text-[#111827] cursor-pointer">
+                            <input 
+                              type="checkbox" 
+                              checked={elevator} 
+                              onChange={(e) => setElevator(e.target.checked)}
+                              className="rounded border-[#E8ECF4] bg-[#F7F8FC] text-[#4F46E5]"
+                            />
+                            Elevators prioritize
+                          </label>
+                        </div>
 
-                {/* E. VOLUNTEER AI SUPPORT TAB */}
-                {activeTab === "volunteer" && (
-                  <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Users className="w-5 h-5 text-emerald-600" />
-                      <h2 className="text-sm font-bold uppercase tracking-wider text-[#111827]">Volunteer Resource Dispatch Console</h2>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <label htmlFor="volunteer-badge-ref" className="text-xs font-bold text-[#6B7280] block mb-1">Badge Reference ID</label>
-                        <input 
-                          id="volunteer-badge-ref"
-                          type="text" 
-                          value={volunteerId} 
-                          onChange={(e) => setVolunteerId(e.target.value)}
-                          className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="volunteer-coordinates-sector" className="text-xs font-bold text-[#6B7280] block mb-1">Sector coordinates</label>
-                        <input 
-                          id="volunteer-coordinates-sector"
-                          type="text" 
-                          value={volunteerLoc} 
-                          onChange={(e) => setVolunteerLoc(e.target.value)}
-                          className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="mb-4">
-                      <label htmlFor="volunteer-query-input" className="text-xs font-bold text-[#6B7280] block mb-1">Query input</label>
-                      <div className="flex gap-2">
-                        <input 
-                          id="volunteer-query-input"
-                          type="text" 
-                          value={volunteerQuery} 
-                          onChange={(e) => setVolunteerQuery(e.target.value)}
-                          className="flex-1 bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2.5 px-3 text-sm outline-none text-[#111827]"
-                        />
                         <button 
-                          onClick={() => handleVolunteerAsk()}
-                          aria-label="Dispatch query to volunteer database"
-                          className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg"
+                          onClick={handleRoutePlan}
+                          disabled={loading}
+                          className="w-full py-2.5 bg-[#4F46E5] hover:bg-indigo-700 transition rounded-lg text-xs font-bold text-white uppercase tracking-wider"
                         >
-                          Dispatch
+                          Map safest route coordinates
                         </button>
-                      </div>
-                    </div>
 
-                    {volunteerResult && (
-                      <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-xs space-y-2">
-                        <p className="text-emerald-700 font-bold">Target sector allocation: {volunteerResult.assigned_zone}</p>
-                        <p className="text-slate-700">Action description: {volunteerResult.task_description}</p>
-                        <p className="text-slate-500">Risk category: {volunteerResult.urgency_level}</p>
+                        {routeResult && (
+                          <div className="mt-6 p-4 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-xs space-y-1">
+                            <p><strong>Computed Pathway:</strong> {routeResult.path.join(" ➔ ")}</p>
+                            <p><strong>ETA:</strong> {routeResult.estimated_minutes} minutes</p>
+                          </div>
+                        )}
                       </div>
-                    )}
+
+                    </div>
+                  )}
+
+                  {/* C. EMERGENCY TAB */}
+                  {activeTab === "emergency" && (
+                    <div className="space-y-8">
+                      
+                      <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm border-l-4 border-l-red-500">
+                        <div className="flex items-center gap-2 mb-4 text-red-600">
+                          <ShieldAlert className="w-5 h-5 animate-pulse" />
+                          <h2 className="text-sm font-bold uppercase tracking-wider">Rescue EMS Dispatcher Console</h2>
+                        </div>
+                        
+                        <div className="mb-4">
+                          <label htmlFor="emergency-alert-input-tab" className="text-xs font-bold text-[#6B7280] block mb-1">Radio Alert Transcript (Live Feed)</label>
+                          <textarea 
+                            id="emergency-alert-input-tab"
+                            rows={3}
+                            value={emergencyText} 
+                            onChange={(e) => setEmergencyText(e.target.value)}
+                            className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
+                          />
+                        </div>
+
+                        <button 
+                          onClick={() => handleEmergencyReport()}
+                          disabled={loading}
+                          className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white transition rounded-lg text-xs font-bold uppercase tracking-wider"
+                        >
+                          Dispatch rescue teams
+                        </button>
+
+                        {emergencyResult && (
+                          <div className="mt-6 p-4 bg-red-50 border border-red-100 rounded-xl text-xs">
+                            <div className="grid grid-cols-2 gap-4 mb-3">
+                              <div>
+                                <span className="text-[#6B7280] block uppercase tracking-wider text-[10px]">Extracted Coordinates</span>
+                                <strong className="text-red-700 text-sm">{emergencyResult.extracted_location}</strong>
+                              </div>
+                              <div>
+                                <span className="text-[#6B7280] block uppercase tracking-wider text-[10px]">Risk Tier</span>
+                                <span className="px-2 py-0.5 rounded text-[10px] font-black bg-red-600 text-white animate-pulse">
+                                  {emergencyResult.severity}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="space-y-1.5 border-t border-red-200 pt-3 text-slate-700">
+                              <p><strong>Dispatched Team:</strong> {emergencyResult.dispatched_unit}</p>
+                              <p><strong>Cleared Route:</strong> {emergencyResult.suggested_route}</p>
+                              <p><strong>Expected Arrival:</strong> {emergencyResult.eta_minutes} mins</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
+                        <div className="flex items-center gap-2 mb-4">
+                          <FileText className="w-5 h-5 text-teal-600" />
+                          <h2 className="text-sm font-bold uppercase tracking-wider">AI Incident Report Compiler</h2>
+                        </div>
+                        
+                        <div className="mb-4">
+                          <label htmlFor="incident-raw-text-tab" className="text-xs font-bold text-[#6B7280] block mb-1">Raw radio log text</label>
+                          <textarea 
+                            id="incident-raw-text-tab"
+                            rows={3}
+                            value={rawIncidentText} 
+                            onChange={(e) => setRawIncidentText(e.target.value)}
+                            className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
+                          />
+                        </div>
+
+                        <button 
+                          onClick={handleGenerateIncident}
+                          disabled={loading}
+                          className="w-full py-2.5 bg-teal-600 hover:bg-teal-700 text-white transition rounded-lg text-xs font-bold uppercase tracking-wider"
+                        >
+                          Compile formal incident record
+                        </button>
+
+                        {incidentResult && (
+                          <div className="mt-6 p-4 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-xs space-y-3 text-slate-700">
+                            <p><strong>Summary:</strong> {incidentResult.summary}</p>
+                            <p><strong>Severity Rating:</strong> {incidentResult.severity}</p>
+                            <p><strong>Remediation:</strong> {incidentResult.recommended_action}</p>
+                            <p><strong>Gear Required:</strong> {incidentResult.resources_required.join(", ")}</p>
+                            <p><strong>Resolution ETA:</strong> {incidentResult.time_estimate}</p>
+                          </div>
+                        )}
+                      </div>
+
+                    </div>
+                  )}
+
+                  {/* D. SUSTAINABILITY TAB */}
+                  {activeTab === "sustainability" && (
+                    <div className="space-y-8">
+                      
+                      <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Zap className="w-5 h-5 text-amber-500" />
+                          <h2 className="text-sm font-bold uppercase tracking-wider">Resource Load Coordinator</h2>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <label htmlFor="sustainability-attendance-tab" className="text-xs font-bold text-[#6B7280] block mb-1">Expected Attendance</label>
+                            <input 
+                              id="sustainability-attendance-tab"
+                              type="number" 
+                              value={attendance} 
+                              onChange={(e) => setAttendance(Number(e.target.value))}
+                              className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
+                            />
+                          </div>
+                          <div>
+                            <label htmlFor="sustainability-temp-tab" className="text-xs font-bold text-[#6B7280] block mb-1">Target Temperature (°C)</label>
+                            <input 
+                              id="sustainability-temp-tab"
+                              type="number" 
+                              value={temp} 
+                              onChange={(e) => setTemp(Number(e.target.value))}
+                              className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
+                            />
+                          </div>
+                        </div>
+
+                        <button 
+                          onClick={handleSustainabilityPredict}
+                          disabled={loading}
+                          className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white transition rounded-lg text-xs font-bold uppercase tracking-wider"
+                        >
+                          Forecast resource loads
+                        </button>
+
+                        {sustainabilityResult && (
+                          <div className="mt-6 p-4 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-xs grid grid-cols-2 md:grid-cols-4 gap-4 text-slate-700">
+                            <div>
+                              <span className="text-[#6B7280] block">Electricity Forecast</span>
+                              <strong className="text-lg text-[#111827]">{sustainabilityResult.electricity_mwh_est} MWh</strong>
+                            </div>
+                            <div>
+                              <span className="text-[#6B7280] block">Water Consumption</span>
+                              <strong className="text-lg text-[#111827]">{sustainabilityResult.water_liters_est.toLocaleString()} L</strong>
+                            </div>
+                            <div>
+                              <span className="text-[#6B7280] block">Trash Yield</span>
+                              <strong className="text-lg text-[#111827]">{sustainabilityResult.waste_tons_est} Tons</strong>
+                            </div>
+                            <div>
+                              <span className="text-[#6B7280] block">Food Demand Forecast</span>
+                              <strong className="text-lg text-[#111827]">{sustainabilityResult.food_demand_units_est.toLocaleString()} units</strong>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                    </div>
+                  )}
+
+                  {/* E. VOLUNTEER AI SUPPORT TAB */}
+                  {activeTab === "volunteer" && (
+                    <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Users className="w-5 h-5 text-emerald-600" />
+                        <h2 className="text-sm font-bold uppercase tracking-wider text-[#111827]">Volunteer Resource Dispatch Console</h2>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <label htmlFor="volunteer-badge-tab" className="text-xs font-bold text-[#6B7280] block mb-1">Badge Reference ID</label>
+                          <input 
+                            id="volunteer-badge-tab"
+                            type="text" 
+                            value={volunteerId} 
+                            onChange={(e) => setVolunteerId(e.target.value)}
+                            className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="volunteer-sector-tab" className="text-xs font-bold text-[#6B7280] block mb-1">Sector coordinates</label>
+                          <input 
+                            id="volunteer-sector-tab"
+                            type="text" 
+                            value={volunteerLoc} 
+                            onChange={(e) => setVolunteerLoc(e.target.value)}
+                            className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mb-4">
+                        <label htmlFor="volunteer-query-tab" className="text-xs font-bold text-[#6B7280] block mb-1">Query input</label>
+                        <div className="flex gap-2">
+                          <input 
+                            id="volunteer-query-tab"
+                            type="text" 
+                            value={volunteerQuery} 
+                            onChange={(e) => setVolunteerQuery(e.target.value)}
+                            className="flex-1 bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2.5 px-3 text-sm outline-none text-[#111827]"
+                          />
+                          <button 
+                            onClick={() => handleVolunteerAsk()}
+                            aria-label="Dispatch query"
+                            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg"
+                          >
+                            Dispatch
+                          </button>
+                        </div>
+                      </div>
+
+                      {volunteerResult && (
+                        <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-xs space-y-2">
+                          <p className="text-emerald-700 font-bold">Target sector allocation: {volunteerResult.assigned_zone}</p>
+                          <p className="text-slate-700">Action description: {volunteerResult.task_description}</p>
+                          <p className="text-slate-500">Risk category: {volunteerResult.urgency_level}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Right sidebar AI Commander Panel (Persistent on desktop) */}
+            <div className="space-y-8">
+              
+              {/* Scenario Decision Trigger (Moved to persistent sidebar for superior UX) */}
+              <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
+                <div className="flex items-center gap-2 mb-4">
+                  <Megaphone className="w-5 h-5 text-indigo-500 animate-bounce" />
+                  <h3 className="text-xs font-bold text-[#111827]">Operations Co-pilot</h3>
+                </div>
+
+                <div className="mb-4">
+                  <label htmlFor="scen-select" className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Active Scenario</label>
+                  <select
+                    id="scen-select"
+                    value={scenario}
+                    onChange={(e) => setScenario(e.target.value)}
+                    className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-xs outline-none text-[#111827]"
+                  >
+                    <option value="Sudden heavy rainstorm during egress peak">Sudden heavy rainstorm during egress peak</option>
+                    <option value="Public metro line failure in zone C corridor">Public metro line failure in zone C corridor</option>
+                    <option value="Security alert near Gate B concourse">Security alert near Gate B concourse</option>
+                  </select>
+                </div>
+
+                <button 
+                  onClick={handleTriggerDecision}
+                  disabled={loading}
+                  className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white transition rounded-lg text-[10px] font-bold uppercase tracking-wider"
+                >
+                  Orchestrate Coordinated Plan
+                </button>
+
+                {decisionResult && (
+                  <div className="mt-4 p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl space-y-2">
+                    <span className="text-[9px] font-bold text-indigo-600 uppercase tracking-widest block">Commander Reasoning Stream</span>
+                    <div className="text-[10px] space-y-1.5 text-slate-700">
+                      {decisionResult.reasoning_steps.slice(0, 3).map((step: string, idx: number) => (
+                        <p key={idx} className="flex gap-1.5">
+                          <span className="text-indigo-600 font-bold">•</span>
+                          {step}
+                        </p>
+                      ))}
+                    </div>
                   </div>
                 )}
+              </div>
 
-              </motion.div>
-            </AnimatePresence>
-          </main>
+              {/* AI Commander Panel */}
+              <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm space-y-6">
+                <div className="flex justify-between items-center pb-4 border-b border-[#E8ECF4]">
+                  <div className="flex items-center gap-2">
+                    <BrainCircuit className="w-5 h-5 text-[#4F46E5]" />
+                    <h3 className="text-sm font-bold text-[#111827]">AI Commander</h3>
+                  </div>
+                  <span className="text-[9px] bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                    Online
+                  </span>
+                </div>
+
+                {/* Match clock */}
+                <div className="p-4 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl flex justify-between items-center">
+                  <div>
+                    <p className="text-[10px] text-[#6B7280] uppercase tracking-wider font-semibold">Current Match</p>
+                    <strong className="text-xs text-[#111827]">Mexico vs Japan</strong>
+                    <p className="text-[9px] text-[#6B7280]">Group Stage • Match 24</p>
+                  </div>
+                  <span className="bg-red-500 text-white text-[11px] font-black px-2 py-1 rounded">
+                    45:32
+                  </span>
+                </div>
+
+                {/* Critical Alerts */}
+                <div className="space-y-3">
+                  <div className="flex justify-between text-[10px] font-bold text-[#6B7280] uppercase">
+                    <span>Critical Alerts</span>
+                    <span className="text-red-500 bg-red-50 px-1.5 py-0.5 rounded font-black">3</span>
+                  </div>
+
+                  <div className="p-3 bg-red-50/50 border border-red-100 rounded-xl space-y-1">
+                    <p className="text-xs font-bold text-red-700">Gate C Overcrowding</p>
+                    <p className="text-[10px] text-red-600">Risk Level: High</p>
+                  </div>
+                  
+                  <div className="p-3 bg-amber-50/50 border border-amber-100 rounded-xl space-y-1">
+                    <p className="text-xs font-bold text-amber-700">Heavy Rain Incoming</p>
+                    <p className="text-[10px] text-amber-600">ETA: 32 minutes</p>
+                  </div>
+                </div>
+
+                {/* AI Recommended Actions checklist */}
+                <div className="space-y-3">
+                  <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-widest block">AI Recommended Actions</span>
+                  
+                  <div className="space-y-2">
+                    {Object.keys(approvals).map((actName) => {
+                      const details = approvals[actName];
+                      return (
+                        <div key={actName} className="p-3 bg-white border border-[#E8ECF4] rounded-xl flex items-center justify-between shadow-sm">
+                          <div className="min-w-0 flex-1 pr-2">
+                            <strong className="text-xs text-[#111827] block truncate">{actName}</strong>
+                            <p className="text-[9px] text-[#6B7280]">Impact: {details.impact} • {details.confidence} confidence</p>
+                          </div>
+                          
+                          <div>
+                            {details.status === "PENDING" ? (
+                              <button 
+                                onClick={() => handleActionApproval(actName, "APPROVED")}
+                                className="py-1 px-3 bg-[#4F46E5] hover:bg-indigo-700 text-white rounded text-[10px] font-bold uppercase transition"
+                              >
+                                Approve
+                              </button>
+                            ) : (
+                              <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded uppercase">
+                                Approved
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <button 
+                    onClick={() => {
+                      Object.keys(approvals).forEach(k => handleActionApproval(k, "APPROVED"));
+                    }}
+                    className="w-full mt-2 py-2 bg-[#4F46E5] hover:bg-indigo-700 text-white transition rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm"
+                  >
+                    Approve All Recommendations
+                  </button>
+                </div>
+
+                {/* Commander Query Input */}
+                <div className="border-t border-[#E8ECF4] pt-4">
+                  <label htmlFor="commander-ask-side" className="sr-only">Ask StadiumMind AI</label>
+                  <div className="flex gap-2">
+                    <input 
+                      id="commander-ask-side"
+                      type="text"
+                      placeholder="Ask StadiumMind AI..."
+                      className="flex-1 bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-xs outline-none text-[#111827] placeholder-[#6B7280]"
+                    />
+                    <button 
+                      aria-label="Send Query"
+                      className="p-2 bg-[#F7F8FC] border border-[#E8ECF4] hover:bg-slate-100 rounded-lg"
+                    >
+                      <Send className="w-3.5 h-3.5 text-[#6B7280]" />
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* AI Insights List */}
+              <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xs font-bold text-[#111827]">AI Insights</h3>
+                  <span className="w-2 h-2 rounded-full bg-[#16A34A] animate-pulse" />
+                </div>
+
+                <div className="space-y-3.5 text-xs">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#111827] font-semibold">Gate C congestion increasing</span>
+                    <span className="text-[9px] text-[#6B7280]">2 min ago</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#111827] font-semibold">Rain probability in 30 mins</span>
+                    <span className="text-[9px] text-[#6B7280]">5 min ago</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#111827] font-semibold">Spanish help requests</span>
+                    <span className="text-[9px] text-[#6B7280]">7 min ago</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#111827] font-semibold">Waste collection behind</span>
+                    <span className="text-[9px] text-[#6B7280]">10 min ago</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* Bottom row widgets: Incident Log Timeline & 6 deployment pills */}
+        <div className="w-full px-4 md:px-8 lg:px-12 pb-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* Live Incident Timeline list */}
+          <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm lg:col-span-2">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xs font-bold text-[#111827]">Live Incident Timeline</h3>
+              <button className="text-[10px] text-[#4F46E5] font-bold hover:underline">View All</button>
+            </div>
+            
+            <div className="space-y-4 max-h-60 overflow-y-auto">
+              {timeline.map((evt) => (
+                <div key={evt.id} className="relative pl-4 border-l border-[#E8ECF4] text-xs">
+                  <span className="absolute top-1 left-[-4px] w-2 h-2 rounded-full bg-[#4F46E5]" />
+                  <div className="flex justify-between text-[10px] text-[#6B7280] font-bold mb-0.5">
+                    <span>{evt.title}</span>
+                    <span>{evt.time}</span>
+                  </div>
+                  <p className="text-[11px] text-[#6B7280] leading-relaxed">{evt.detail}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 6 Bottom Metric pills */}
+          <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm space-y-4">
+            <h3 className="text-xs font-bold text-[#111827] mb-2">Resource Deployments</h3>
+            
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="p-3 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-center">
+                <span className="text-[9px] text-[#6B7280] block font-semibold uppercase">Active Volunteers</span>
+                <strong className="text-sm text-[#111827]">1,248</strong>
+              </div>
+              <div className="p-3 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-center">
+                <span className="text-[9px] text-[#6B7280] block font-semibold uppercase">Medical Teams</span>
+                <strong className="text-sm text-[#111827]">24</strong>
+              </div>
+              <div className="p-3 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-center">
+                <span className="text-[9px] text-[#6B7280] block font-semibold uppercase">Shuttle Buses</span>
+                <strong className="text-sm text-[#111827]">78</strong>
+              </div>
+              <div className="p-3 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-center">
+                <span className="text-[9px] text-[#6B7280] block font-semibold uppercase">Parking Occupancy</span>
+                <strong className="text-sm text-[#111827]">89%</strong>
+              </div>
+              <div className="p-3 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-center">
+                <span className="text-[9px] text-[#6B7280] block font-semibold uppercase">Energy Usage</span>
+                <strong className="text-sm text-[#111827]">72%</strong>
+              </div>
+              <div className="p-3 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-center">
+                <span className="text-[9px] text-[#6B7280] block font-semibold uppercase">Waste Collected</span>
+                <strong className="text-sm text-[#111827]">4.2 tons</strong>
+              </div>
+            </div>
+          </div>
 
         </div>
 
