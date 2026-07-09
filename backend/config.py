@@ -15,7 +15,7 @@ class Settings:
     DEBUG: bool = os.getenv("DEBUG", "True").lower() == "true"
     
     CORS_ORIGINS: list = [
-        origin.strip() for origin in os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:3001,https://stadiummind-ai.vercel.app").split(",")
+        origin.strip() for origin in os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:3001,https://stadiummind-ai.vercel.app,https://stadium-mind-ai.vercel.app").split(",")
     ]
     
     RATE_LIMIT_PER_MINUTE: int = int(os.getenv("RATE_LIMIT_PER_MINUTE", 60))
