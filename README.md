@@ -4,7 +4,7 @@
 
 ---
 
-## 🏆 Challenge Submission Details
+## 🏆 Challenge Submission Details 
 
 ### 1. Chosen Vertical
 *   **Stadium Operations & Coordinated Intelligence (AI Stadium Operating System)**: Multi-agent orchestrator managing fans, volunteers, police, stadium staff, and emergency medical teams synchronously.
