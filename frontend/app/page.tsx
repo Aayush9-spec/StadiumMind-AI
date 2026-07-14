@@ -1,17 +1,30 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ShieldAlert, Activity, Users, Bus, Zap, CloudRain,
   Mic, MicOff, Search, Compass, AlertCircle, FileText, CheckCircle,
   TrendingUp, RefreshCw, Send, ArrowRight, Accessibility, LayoutDashboard,
-  Megaphone, ShieldCheck, Info, Sun, Moon, Volume2, ListOrdered, BrainCircuit, Bell, User
+  Megaphone, ShieldCheck, Info, Sun, Moon, Volume2, ListOrdered, BrainCircuit, Bell, User,
+  Shield, BarChart4, HelpCircle
 } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line } from "recharts";
 import { api } from "../lib/api";
 import CommandPalette from "../components/CommandPalette";
 import DigitalTwin from "../components/DigitalTwin";
+import StadiumBackground from "../components/StadiumBackground";
+import Navbar from "../components/layout/Navbar";
+import Sidebar from "../components/layout/Sidebar";
+import FooterStatus from "../components/layout/FooterStatus";
+import MetricCard from "../components/dashboard/MetricCard";
+import AIOrb from "../components/ui/AIOrb";
+import AlertPanel from "../components/dashboard/AlertPanel";
+import RecommendationCard from "../components/dashboard/RecommendationCard";
+import CrowdForecastChart from "../components/dashboard/CrowdForecastChart";
+import Timeline from "../components/dashboard/Timeline";
+import StatsCard from "../components/common/StatsCard";
+import AIChatWidget from "../components/ai/AIChatWidget";
 
 // Sparkline Mock Data for Top Cards
 const sparklineDataUp = [
@@ -96,12 +109,31 @@ export default function Home() {
   const [rawIncidentText, setRawIncidentText] = useState("Fan slipped on wet stairs, minor leg cut, medic applied bandage.");
   const [incidentResult, setIncidentResult] = useState<any>(null);
 
+  const [commanderQuery, setCommanderQuery] = useState("");
+
+  const handleCommanderAsk = async () => {
+    if (!commanderQuery.trim()) return;
+    setLoading(true);
+    try {
+      const res = await api.askVolunteer("COMMANDER", "Command Center", commanderQuery);
+      setTimeline((prev) => [
+        { id: Date.now(), time: "Just Now", title: `Commander: ${commanderQuery}`, detail: `Result: ${res.task_description} (Zone: ${res.assigned_zone})` },
+        ...prev
+      ]);
+      setCommanderQuery("");
+    } catch (e) {
+      alert("Error calling AI agent. Please verify your backend server connection.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Command palette keyboard listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
-        setIsCommandPaletteOpen(true);
+        setIsCommandPaletteOpen((prev) => !prev);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -123,47 +155,61 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
+  const recognitionRef = useRef<any>(null);
+
   const handleVoiceInput = () => {
-    if (typeof window !== "undefined" && ("webkitSpeechRecognition" in window || "speechRecognition" in window)) {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = "en-US";
+    if (typeof window === "undefined") return;
 
-      recognition.onstart = () => {
-        setIsListening(true);
-        setVoiceQuery("Listening...");
-      };
-
-      recognition.onresult = async (event: any) => {
-        const text = event.results[0][0].transcript;
-        setVoiceQuery(text);
-        setIsListening(false);
-        if (text.toLowerCase().includes("injured") || text.toLowerCase().includes("collapsed") || text.toLowerCase().includes("help")) {
-          setEmergencyText(text);
-          setActiveTab("emergency");
-          await handleEmergencyReport(text);
-        } else {
-          setVolunteerQuery(text);
-          setActiveTab("volunteer");
-          await handleVolunteerAsk(text);
-        }
-      };
-
-      recognition.onerror = () => {
-        setIsListening(false);
-        setVoiceQuery("Speech error.");
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognition.start();
-    } else {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
       alert("Speech recognition is not supported in this browser.");
+      return;
     }
+
+    if (isListening) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      setIsListening(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+
+    recognition.onstart = () => {
+      setIsListening(true);
+      setVoiceQuery("Listening...");
+    };
+
+    recognition.onresult = async (event: any) => {
+      const text = event.results[0][0].transcript;
+      setVoiceQuery(text);
+      setIsListening(false);
+      if (text.toLowerCase().includes("injured") || text.toLowerCase().includes("collapsed") || text.toLowerCase().includes("help")) {
+        setEmergencyText(text);
+        setActiveTab("emergency");
+        await handleEmergencyReport(text);
+      } else {
+        setVolunteerQuery(text);
+        setActiveTab("volunteer");
+        await handleVolunteerAsk(text);
+      }
+    };
+
+    recognition.onerror = () => {
+      setIsListening(false);
+      setVoiceQuery("Speech error.");
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
   };
 
   const handleCrowdPredict = async () => {
@@ -275,102 +321,26 @@ export default function Home() {
       ...prev
     ]);
   };
-
   return (
-    <div className={`min-h-screen font-sans transition-all duration-300 ${
+    <div className={`min-h-screen font-sans relative transition-all duration-300 ${
       highContrast 
         ? "bg-black text-white selection:bg-yellow-400 selection:text-black" 
-        : "bg-[#F7F8FC] text-[#111827] selection:bg-indigo-600 selection:text-white"
+        : "text-[#F8FAFC] selection:bg-indigo-600 selection:text-white"
     }`}>
+      
+      {/* Layered Stadium Background Visuals */}
+      <StadiumBackground />
       
       {/* Main Layout Container */}
       <div className="relative z-10 flex flex-col min-h-screen">
         
-        {/* Header Block */}
-        <header className="border-b border-[#E8ECF4] bg-white sticky top-0 z-50 shadow-sm">
-          <div className="w-full px-4 md:px-8 lg:px-12 py-3.5 flex flex-col md:flex-row items-center justify-between gap-4">
-            
-            {/* Logo and Brand */}
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-gradient-to-tr from-indigo-600 to-blue-600 rounded-xl shadow-lg shadow-indigo-500/10">
-                <BrainCircuit className="w-6.5 h-6.5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-lg font-black tracking-tight flex items-center gap-2 text-[#111827]">
-                  StadiumMind OS
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600 border border-indigo-200 tracking-wider">ENTERPRISE</span>
-                </h1>
-                <p className="text-[9px] text-[#6B7280] font-bold tracking-widest uppercase">
-                  FIFA World Cup 2026 Operations
-                </p>
-              </div>
-            </div>
-
-            {/* Top Search bar Console */}
-            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#E8ECF4] bg-[#F7F8FC] w-72">
-              <Search className="w-4 h-4 text-[#6B7280]" />
-              <input 
-                onClick={() => setIsCommandPaletteOpen(true)}
-                type="text" 
-                placeholder="Search command console..." 
-                readOnly
-                className="bg-transparent text-xs outline-none text-[#111827] placeholder-[#6B7280] cursor-pointer w-full"
-              />
-              <kbd className="bg-white border border-[#E8ECF4] text-[9px] px-1.5 py-0.5 rounded font-bold text-[#6B7280]">⌘K</kbd>
-            </div>
-
-            {/* Top Toolbar Actions */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1 bg-[#F7F8FC] border border-[#E8ECF4] px-2.5 py-1 rounded-lg text-xs text-[#16A34A] font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A] animate-ping" />
-                <span>All Systems Operational</span>
-              </div>
-
-              <select 
-                id="header-lang-selector"
-                aria-label="Select Language"
-                className="bg-white border border-[#E8ECF4] rounded-lg px-2 py-1 text-xs text-[#111827] outline-none"
-              >
-                <option value="en">English</option>
-                <option value="es">Español</option>
-              </select>
-
-              <button
-                onClick={() => setHighContrast(!highContrast)}
-                aria-label="Toggle High Contrast Mode"
-                className="p-2 rounded-lg border border-[#E8ECF4] bg-white text-[#6B7280] hover:text-[#111827] transition"
-              >
-                {highContrast ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
-              </button>
-
-              <button
-                onClick={handleVoiceInput}
-                aria-label={isListening ? "Stop listening to microphone" : "Start listening to microphone"}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold transition duration-300 text-xs uppercase tracking-wider ${
-                  isListening 
-                    ? "bg-red-500 text-white animate-pulse" 
-                    : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20"
-                }`}
-              >
-                {isListening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
-                {isListening ? "Listening" : "Voice AI"}
-              </button>
-
-              {/* Ops Admin profile */}
-              <div className="flex items-center gap-2 pl-3 border-l border-[#E8ECF4]">
-                <div className="p-1 bg-[#F7F8FC] border border-[#E8ECF4] rounded-full">
-                  <User className="w-4 h-4 text-[#6B7280]" />
-                </div>
-                <div className="hidden sm:block text-left">
-                  <p className="text-[10px] font-bold text-[#111827]">Ops Admin</p>
-                  <p className="text-[8px] text-[#6B7280] font-semibold uppercase">Administrator</p>
-                </div>
-              </div>
-
-            </div>
-
-          </div>
-        </header>
+        {/* Header Block Component */}
+        <Navbar
+          isListening={isListening}
+          highContrast={highContrast}
+          onToggleContrast={() => setHighContrast(!highContrast)}
+          onVoiceClick={handleVoiceInput}
+        />
 
         {/* Command Palette Menu overlay */}
         <CommandPalette
@@ -401,85 +371,8 @@ export default function Home() {
         {/* Central Layout Grid */}
         <div className="flex-1 w-full px-4 md:px-8 lg:px-12 py-8 flex flex-col lg:flex-row gap-8">
           
-          {/* Navigation Tab list */}
-          <aside className="w-full lg:w-60 flex-shrink-0">
-            <nav className="flex flex-row overflow-x-auto lg:flex-col gap-1.5 pb-3 lg:pb-0 scrollbar-none" aria-label="Operating system navigation">
-              <button
-                onClick={() => setActiveTab("overview")}
-                className={`flex-shrink-0 flex items-center gap-3 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition ${
-                  activeTab === "overview" 
-                    ? "bg-[#4F46E5] text-white shadow-sm" 
-                    : "text-[#6B7280] hover:bg-white hover:text-[#111827]"
-                }`}
-              >
-                <LayoutDashboard className="w-4 h-4" />
-                Overview Command
-              </button>
-              <button
-                onClick={() => setActiveTab("crowd")}
-                className={`flex-shrink-0 flex items-center gap-3 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition ${
-                  activeTab === "crowd" 
-                    ? "bg-[#4F46E5] text-white shadow-sm" 
-                    : "text-[#6B7280] hover:bg-white hover:text-[#111827]"
-                }`}
-              >
-                <Compass className="w-4 h-4" />
-                Digital Twin & Route
-              </button>
-              <button
-                onClick={() => setActiveTab("emergency")}
-                className={`flex-shrink-0 flex items-center gap-3 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition ${
-                  activeTab === "emergency" 
-                    ? "bg-[#4F46E5] text-white shadow-sm" 
-                    : "text-[#6B7280] hover:bg-white hover:text-[#111827]"
-                }`}
-              >
-                <ShieldAlert className="w-4 h-4" />
-                Emergency Rescue
-              </button>
-              <button
-                onClick={() => setActiveTab("sustainability")}
-                className={`flex-shrink-0 flex items-center gap-3 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition ${
-                  activeTab === "sustainability" 
-                    ? "bg-[#4F46E5] text-white shadow-sm" 
-                    : "text-[#6B7280] hover:bg-white hover:text-[#111827]"
-                }`}
-              >
-                <Zap className="w-4 h-4" />
-                Sustainability Grid
-              </button>
-              <button
-                onClick={() => setActiveTab("volunteer")}
-                className={`flex-shrink-0 flex items-center gap-3 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition ${
-                  activeTab === "volunteer" 
-                    ? "bg-[#4F46E5] text-white shadow-sm" 
-                    : "text-[#6B7280] hover:bg-white hover:text-[#111827]"
-                }`}
-              >
-                <Users className="w-4 h-4" />
-                Volunteer AI
-              </button>
-            </nav>
-
-            {/* Quick Stats sidebar widget */}
-            <div className="hidden lg:block mt-8 p-4 bg-white border border-[#E8ECF4] rounded-2xl shadow-sm space-y-4">
-              <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-widest block font-sans">System Diagnostics</span>
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-[#6B7280]">GenAI SDK:</span>
-                  <strong className="text-[#16A34A]">google-genai 2.10</strong>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#6B7280]">Weather API:</span>
-                  <strong className="text-[#111827]">Open-Meteo</strong>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#6B7280]">Response Latency:</span>
-                  <strong className="text-[#111827]">120ms</strong>
-                </div>
-              </div>
-            </div>
-          </aside>
+          {/* Sidebar Navigation component */}
+          <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
           {/* Main layout splitting main panels & right persistent sidebar AI Commander */}
           <div className="flex-1 min-w-0 grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -503,65 +396,47 @@ export default function Home() {
                       {/* Top 4 premium metric cards */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         
-                        <div className="bg-white border border-[#E8ECF4] p-5 rounded-2xl shadow-sm hover:shadow-md transition duration-300">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Inflow Congestion</span>
-                              <h4 className="text-lg font-black text-[#111827]">{telemetry.crowd_density.value}</h4>
-                              <span className="inline-block mt-2 text-[9px] font-black text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">High Risk</span>
-                              <span className="text-[9px] text-[#6B7280] block mt-1">↑ 18% vs last 15 min</span>
-                            </div>
-                            <div className="w-16 h-10">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={sparklineDataUp}>
-                                  <Area type="monotone" dataKey="val" stroke="#EF4444" fill="rgba(239, 68, 68, 0.05)" strokeWidth={1.5} dot={false} />
-                                </AreaChart>
-                              </ResponsiveContainer>
-                            </div>
-                          </div>
-                        </div>
+                        <MetricCard
+                          title="Inflow Congestion"
+                          value={telemetry.crowd_density.value}
+                          badgeText="High Risk"
+                          badgeStyle="red"
+                          trendText="↑ 18% vs last 15 min"
+                          accentColor="red"
+                          sparklineData={sparklineDataUp}
+                          sparklineColor="#EF4444"
+                        />
 
-                        <div className="bg-white border border-[#E8ECF4] p-5 rounded-2xl shadow-sm hover:shadow-md transition duration-300">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Egress Transit</span>
-                              <h4 className="text-lg font-black text-[#111827]">{telemetry.transport.value}</h4>
-                              <span className="inline-block mt-2 text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">Optimal</span>
-                              <span className="text-[9px] text-[#6B7280] block mt-1">On-time performance</span>
-                            </div>
-                            <div className="w-16 h-10">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={sparklineDataDown}>
-                                  <Area type="monotone" dataKey="val" stroke="#16A34A" fill="rgba(22, 163, 74, 0.05)" strokeWidth={1.5} dot={false} />
-                                </AreaChart>
-                              </ResponsiveContainer>
-                            </div>
-                          </div>
-                        </div>
+                        <MetricCard
+                          title="Egress Transit"
+                          value={telemetry.transport.value}
+                          badgeText="Optimal"
+                          badgeStyle="emerald"
+                          trendText="On-time performance"
+                          accentColor="emerald"
+                          sparklineData={sparklineDataDown}
+                          sparklineColor="#16A34A"
+                        />
 
-                        <div className="bg-white border border-[#E8ECF4] p-5 rounded-2xl shadow-sm hover:shadow-md transition duration-300">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Environmental</span>
-                              <h4 className="text-lg font-black text-[#111827]">{telemetry.weather.value}</h4>
-                              <span className="inline-block mt-2 text-[9px] font-black text-blue-600 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded">Clear</span>
-                              <span className="text-[9px] text-[#6B7280] block mt-1">Wind 10.8 km/h</span>
-                            </div>
-                            <CloudRain className="w-6 h-6 text-blue-500" />
-                          </div>
-                        </div>
+                        <MetricCard
+                          title="Environmental"
+                          value={telemetry.weather.value}
+                          badgeText="Clear"
+                          badgeStyle="blue"
+                          trendText="Wind 10.8 km/h"
+                          accentColor="blue"
+                          icon={<CloudRain className="w-6 h-6 text-blue-400" />}
+                        />
 
-                        <div className="bg-white border border-[#E8ECF4] p-5 rounded-2xl shadow-sm hover:shadow-md transition duration-300">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Live Attendance</span>
-                              <h4 className="text-lg font-black text-[#111827]">62,845</h4>
-                              <span className="inline-block mt-2 text-[9px] font-black text-[#4F46E5] bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded">↑ 1,245 today</span>
-                              <span className="text-[9px] text-[#6B7280] block mt-1">Capacity: 78%</span>
-                            </div>
-                            <Users className="w-6 h-6 text-[#4F46E5]" />
-                          </div>
-                        </div>
+                        <MetricCard
+                          title="Live Attendance"
+                          value="62,845"
+                          badgeText="↑ 1,245 today"
+                          badgeStyle="indigo"
+                          trendText="Capacity: 78%"
+                          accentColor="indigo"
+                          icon={<Users className="w-6 h-6 text-indigo-400" />}
+                        />
 
                       </div>
 
@@ -582,35 +457,8 @@ export default function Home() {
                         }}
                       />
 
-                      {/* Crowd Flow vs Forecast Chart */}
-                      <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
-                        <div className="flex justify-between items-center mb-4">
-                          <div>
-                            <h3 className="text-xs font-bold text-[#111827]">Crowd Flow vs Forecast</h3>
-                            <p className="text-[10px] text-[#6B7280] uppercase tracking-wider">Real-time simulation overlay</p>
-                          </div>
-                          <span className="text-[10px] bg-[#F7F8FC] border border-[#E8ECF4] text-[#6B7280] px-2 py-0.5 rounded font-bold uppercase">Real-time</span>
-                        </div>
-                        <div className="h-64">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={crowdTrendData}>
-                              <defs>
-                                <linearGradient id="colorFlow" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.2}/>
-                                  <stop offset="95%" stopColor="#4F46E5" stopOpacity={0}/>
-                                </linearGradient>
-                              </defs>
-                              <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
-                              <XAxis dataKey="time" stroke="#6B7280" fontSize={10} />
-                              <YAxis stroke="#6B7280" fontSize={10} />
-                              <Tooltip contentStyle={{ backgroundColor: "#FFFFFF", borderColor: "#E8ECF4" }} />
-                              <Area type="monotone" dataKey="Flow" stroke="#4F46E5" strokeWidth={2.5} fillOpacity={1} fill="url(#colorFlow)" />
-                              <Line type="monotone" dataKey="Forecast" stroke="#94A3B8" strokeWidth={1.5} strokeDasharray="5 5" dot={false} />
-                            </AreaChart>
-                          </ResponsiveContainer>
-                        </div>
-                      </div>
-
+                       {/* Crowd Flow vs Forecast Chart Component */}
+                       <CrowdForecastChart data={crowdTrendData} />
                     </div>
                   )}
 
@@ -635,51 +483,51 @@ export default function Home() {
                       />
 
                       {/* Routing logic pathfinder */}
-                      <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
-                        <div className="flex items-center gap-2 mb-4">
-                          <Compass className="w-5 h-5 text-[#4F46E5]" />
-                          <h2 className="text-sm font-bold uppercase tracking-wider">AI Pathfinding Navigation Coordinator</h2>
+                      <div className="glass-card p-6">
+                        <div className="flex items-center gap-2.5 mb-5">
+                          <Compass className="w-5 h-5 text-indigo-400" />
+                          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-200">AI Pathfinding Navigation Coordinator</h2>
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                           <div>
-                            <label htmlFor="route-start-tab" className="text-xs font-bold text-[#6B7280] block mb-1">Starting Location Sector</label>
+                            <label htmlFor="route-start-tab" className="text-xs font-bold text-slate-400 block mb-1.5">Starting Location Sector</label>
                             <input 
                               id="route-start-tab"
                               type="text" 
                               value={routeStart} 
                               onChange={(e) => setRouteStart(e.target.value)}
-                              className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
+                              className="w-full bg-slate-950/60 border border-white/10 rounded-xl py-2.5 px-3.5 text-sm outline-none text-white focus:bg-slate-955 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all placeholder:text-slate-500"
                             />
                           </div>
                           <div>
-                            <label htmlFor="route-end-tab" className="text-xs font-bold text-[#6B7280] block mb-1">Egress target Gate</label>
+                            <label htmlFor="route-end-tab" className="text-xs font-bold text-slate-400 block mb-1.5">Egress target Gate</label>
                             <input 
                               id="route-end-tab"
                               type="text" 
                               value={routeEnd} 
                               onChange={(e) => setRouteEnd(e.target.value)}
-                              className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
+                              className="w-full bg-slate-950/60 border border-white/10 rounded-xl py-2.5 px-3.5 text-sm outline-none text-white focus:bg-slate-955 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all placeholder:text-slate-500"
                             />
                           </div>
                         </div>
 
-                        <div className="flex gap-6 mb-4">
-                          <label className="flex items-center gap-2 text-xs font-bold text-[#111827] cursor-pointer">
+                        <div className="flex gap-6 mb-5">
+                          <label className="flex items-center gap-2.5 text-xs font-semibold text-slate-300 cursor-pointer select-none">
                             <input 
                               type="checkbox" 
                               checked={wheelchair} 
                               onChange={(e) => setWheelchair(e.target.checked)}
-                              className="rounded border-[#E8ECF4] bg-[#F7F8FC] text-[#4F46E5]"
+                              className="w-4 h-4 rounded border-white/10 bg-slate-950 text-indigo-650 focus:ring-indigo-500/20 cursor-pointer"
                             />
                             Wheelchair Access Required
                           </label>
-                          <label className="flex items-center gap-2 text-xs font-bold text-[#111827] cursor-pointer">
+                          <label className="flex items-center gap-2.5 text-xs font-semibold text-slate-300 cursor-pointer select-none">
                             <input 
                               type="checkbox" 
                               checked={elevator} 
                               onChange={(e) => setElevator(e.target.checked)}
-                              className="rounded border-[#E8ECF4] bg-[#F7F8FC] text-[#4F46E5]"
+                              className="w-4 h-4 rounded border-white/10 bg-slate-950 text-indigo-650 focus:ring-indigo-500/20 cursor-pointer"
                             />
                             Elevators prioritize
                           </label>
@@ -688,15 +536,15 @@ export default function Home() {
                         <button 
                           onClick={handleRoutePlan}
                           disabled={loading}
-                          className="w-full py-2.5 bg-[#4F46E5] hover:bg-indigo-700 transition rounded-lg text-xs font-bold text-white uppercase tracking-wider"
+                          className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 focus:ring-2 focus:ring-indigo-500/20 transition-all rounded-xl text-xs font-bold text-white uppercase tracking-wider shadow-sm hover:shadow active:scale-[0.99] cursor-pointer"
                         >
                           Map safest route coordinates
                         </button>
 
                         {routeResult && (
-                          <div className="mt-6 p-4 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-xs space-y-1">
-                            <p><strong>Computed Pathway:</strong> {routeResult.path.join(" ➔ ")}</p>
-                            <p><strong>ETA:</strong> {routeResult.estimated_minutes} minutes</p>
+                          <div className="mt-6 p-4 bg-slate-900/60 border border-white/10 rounded-xl text-xs space-y-1">
+                            <p className="text-slate-200"><strong>Computed Pathway:</strong> {routeResult.path.join(" ➔ ")}</p>
+                            <p className="text-slate-350"><strong>ETA:</strong> {routeResult.estimated_minutes} minutes</p>
                           </div>
                         )}
                       </div>
@@ -708,46 +556,46 @@ export default function Home() {
                   {activeTab === "emergency" && (
                     <div className="space-y-8">
                       
-                      <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm border-l-4 border-l-red-500">
-                        <div className="flex items-center gap-2 mb-4 text-red-600">
+                      <div className="glass-card p-6 border-l-4 border-l-red-500">
+                        <div className="flex items-center gap-2 mb-4 text-red-400">
                           <ShieldAlert className="w-5 h-5 animate-pulse" />
                           <h2 className="text-sm font-bold uppercase tracking-wider">Rescue EMS Dispatcher Console</h2>
                         </div>
                         
                         <div className="mb-4">
-                          <label htmlFor="emergency-alert-input-tab" className="text-xs font-bold text-[#6B7280] block mb-1">Radio Alert Transcript (Live Feed)</label>
+                          <label htmlFor="emergency-alert-input-tab" className="text-xs font-bold text-slate-400 block mb-1.5">Radio Alert Transcript (Live Feed)</label>
                           <textarea 
                             id="emergency-alert-input-tab"
                             rows={3}
                             value={emergencyText} 
                             onChange={(e) => setEmergencyText(e.target.value)}
-                            className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
+                            className="w-full bg-slate-950/60 border border-white/10 rounded-xl py-2.5 px-3.5 text-sm outline-none text-white focus:bg-slate-955 focus:border-red-550 focus:ring-2 focus:ring-red-550/10 transition-all placeholder:text-slate-500"
                           />
                         </div>
 
                         <button 
                           onClick={() => handleEmergencyReport()}
                           disabled={loading}
-                          className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white transition rounded-lg text-xs font-bold uppercase tracking-wider"
+                          className="w-full py-3 bg-red-600 hover:bg-red-700 active:bg-red-850 focus:ring-2 focus:ring-red-500/20 transition-all rounded-xl text-xs font-bold text-white uppercase tracking-wider shadow-sm hover:shadow active:scale-[0.99] cursor-pointer"
                         >
                           Dispatch rescue teams
                         </button>
 
                         {emergencyResult && (
-                          <div className="mt-6 p-4 bg-red-50 border border-red-100 rounded-xl text-xs">
+                          <div className="mt-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-xs">
                             <div className="grid grid-cols-2 gap-4 mb-3">
                               <div>
-                                <span className="text-[#6B7280] block uppercase tracking-wider text-[10px]">Extracted Coordinates</span>
-                                <strong className="text-red-700 text-sm">{emergencyResult.extracted_location}</strong>
+                                <span className="text-slate-400 block uppercase tracking-wider text-[10px] font-bold">Extracted Coordinates</span>
+                                <strong className="text-red-400 text-sm font-bold">{emergencyResult.extracted_location}</strong>
                               </div>
                               <div>
-                                <span className="text-[#6B7280] block uppercase tracking-wider text-[10px]">Risk Tier</span>
-                                <span className="px-2 py-0.5 rounded text-[10px] font-black bg-red-600 text-white animate-pulse">
+                                <span className="text-slate-400 block uppercase tracking-wider text-[10px] font-bold">Risk Tier</span>
+                                <span className="px-2 py-0.5 rounded text-[10px] font-black bg-red-650 text-white animate-pulse">
                                   {emergencyResult.severity}
                                 </span>
                               </div>
                             </div>
-                            <div className="space-y-1.5 border-t border-red-200 pt-3 text-slate-700">
+                            <div className="space-y-1.5 border-t border-white/10 pt-3 text-slate-300">
                               <p><strong>Dispatched Team:</strong> {emergencyResult.dispatched_unit}</p>
                               <p><strong>Cleared Route:</strong> {emergencyResult.suggested_route}</p>
                               <p><strong>Expected Arrival:</strong> {emergencyResult.eta_minutes} mins</p>
@@ -755,34 +603,33 @@ export default function Home() {
                           </div>
                         )}
                       </div>
-
-                      <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
+                      <div className="glass-card p-6">
                         <div className="flex items-center gap-2 mb-4">
-                          <FileText className="w-5 h-5 text-teal-600" />
-                          <h2 className="text-sm font-bold uppercase tracking-wider">AI Incident Report Compiler</h2>
+                          <FileText className="w-5 h-5 text-teal-400" />
+                          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-200">AI Incident Report Compiler</h2>
                         </div>
                         
                         <div className="mb-4">
-                          <label htmlFor="incident-raw-text-tab" className="text-xs font-bold text-[#6B7280] block mb-1">Raw radio log text</label>
+                          <label htmlFor="incident-raw-text-tab" className="text-xs font-bold text-slate-400 block mb-1.5">Raw radio log text</label>
                           <textarea 
                             id="incident-raw-text-tab"
                             rows={3}
                             value={rawIncidentText} 
                             onChange={(e) => setRawIncidentText(e.target.value)}
-                            className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
+                            className="w-full bg-slate-950/60 border border-white/10 rounded-xl py-2.5 px-3.5 text-sm outline-none text-white focus:bg-slate-955 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 transition-all placeholder:text-slate-500"
                           />
                         </div>
 
                         <button 
                           onClick={handleGenerateIncident}
                           disabled={loading}
-                          className="w-full py-2.5 bg-teal-600 hover:bg-teal-700 text-white transition rounded-lg text-xs font-bold uppercase tracking-wider"
+                          className="w-full py-3 bg-teal-600 hover:bg-teal-700 active:bg-teal-800 focus:ring-2 focus:ring-teal-500/20 transition-all rounded-xl text-xs font-bold text-white uppercase tracking-wider shadow-sm hover:shadow active:scale-[0.99] cursor-pointer"
                         >
                           Compile formal incident record
                         </button>
 
                         {incidentResult && (
-                          <div className="mt-6 p-4 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-xs space-y-3 text-slate-700">
+                          <div className="mt-6 p-4 bg-slate-900/60 border border-white/10 rounded-xl text-xs space-y-3 text-slate-300">
                             <p><strong>Summary:</strong> {incidentResult.summary}</p>
                             <p><strong>Severity Rating:</strong> {incidentResult.severity}</p>
                             <p><strong>Remediation:</strong> {incidentResult.recommended_action}</p>
@@ -799,31 +646,31 @@ export default function Home() {
                   {activeTab === "sustainability" && (
                     <div className="space-y-8">
                       
-                      <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
+                      <div className="glass-card p-6">
                         <div className="flex items-center gap-2 mb-4">
-                          <Zap className="w-5 h-5 text-amber-500" />
-                          <h2 className="text-sm font-bold uppercase tracking-wider">Resource Load Coordinator</h2>
+                          <Zap className="w-5 h-5 text-amber-400" />
+                          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-200">Resource Load Coordinator</h2>
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                           <div>
-                            <label htmlFor="sustainability-attendance-tab" className="text-xs font-bold text-[#6B7280] block mb-1">Expected Attendance</label>
+                            <label htmlFor="sustainability-attendance-tab" className="text-xs font-bold text-slate-400 block mb-1.5">Expected Attendance</label>
                             <input 
                               id="sustainability-attendance-tab"
                               type="number" 
                               value={attendance} 
                               onChange={(e) => setAttendance(Number(e.target.value))}
-                              className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
+                              className="w-full bg-slate-950/60 border border-white/10 rounded-xl py-2.5 px-3.5 text-sm outline-none text-white focus:bg-slate-955 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all placeholder:text-slate-500"
                             />
                           </div>
                           <div>
-                            <label htmlFor="sustainability-temp-tab" className="text-xs font-bold text-[#6B7280] block mb-1">Target Temperature (°C)</label>
+                            <label htmlFor="sustainability-temp-tab" className="text-xs font-bold text-slate-400 block mb-1.5">Target Temperature (°C)</label>
                             <input 
                               id="sustainability-temp-tab"
                               type="number" 
                               value={temp} 
                               onChange={(e) => setTemp(Number(e.target.value))}
-                              className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
+                              className="w-full bg-slate-950/60 border border-white/10 rounded-xl py-2.5 px-3.5 text-sm outline-none text-white focus:bg-slate-955 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all placeholder:text-slate-500"
                             />
                           </div>
                         </div>
@@ -831,28 +678,28 @@ export default function Home() {
                         <button 
                           onClick={handleSustainabilityPredict}
                           disabled={loading}
-                          className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white transition rounded-lg text-xs font-bold uppercase tracking-wider"
+                          className="w-full py-3 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 focus:ring-2 focus:ring-amber-500/20 transition-all rounded-xl text-xs font-bold text-white uppercase tracking-wider shadow-sm hover:shadow active:scale-[0.99] cursor-pointer"
                         >
                           Forecast resource loads
                         </button>
 
                         {sustainabilityResult && (
-                          <div className="mt-6 p-4 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-xs grid grid-cols-2 md:grid-cols-4 gap-4 text-slate-700">
+                          <div className="mt-6 p-4 bg-slate-900/60 border border-white/10 rounded-xl text-xs grid grid-cols-2 md:grid-cols-4 gap-4 text-slate-300">
                             <div>
-                              <span className="text-[#6B7280] block">Electricity Forecast</span>
-                              <strong className="text-lg text-[#111827]">{sustainabilityResult.electricity_mwh_est} MWh</strong>
+                              <span className="text-slate-400 block font-semibold mb-0.5">Electricity Forecast</span>
+                              <strong className="text-lg text-slate-200 font-extrabold">{sustainabilityResult.electricity_mwh_est} MWh</strong>
                             </div>
                             <div>
-                              <span className="text-[#6B7280] block">Water Consumption</span>
-                              <strong className="text-lg text-[#111827]">{sustainabilityResult.water_liters_est.toLocaleString()} L</strong>
+                              <span className="text-slate-400 block font-semibold mb-0.5">Water Consumption</span>
+                              <strong className="text-lg text-slate-200 font-extrabold">{sustainabilityResult.water_liters_est.toLocaleString()} L</strong>
                             </div>
                             <div>
-                              <span className="text-[#6B7280] block">Trash Yield</span>
-                              <strong className="text-lg text-[#111827]">{sustainabilityResult.waste_tons_est} Tons</strong>
+                              <span className="text-slate-400 block font-semibold mb-0.5">Trash Yield</span>
+                              <strong className="text-lg text-slate-200 font-extrabold">{sustainabilityResult.waste_tons_est} Tons</strong>
                             </div>
                             <div>
-                              <span className="text-[#6B7280] block">Food Demand Forecast</span>
-                              <strong className="text-lg text-[#111827]">{sustainabilityResult.food_demand_units_est.toLocaleString()} units</strong>
+                              <span className="text-slate-400 block font-semibold mb-0.5">Food Demand Forecast</span>
+                              <strong className="text-lg text-slate-200 font-extrabold">{sustainabilityResult.food_demand_units_est.toLocaleString()} units</strong>
                             </div>
                           </div>
                         )}
@@ -863,49 +710,49 @@ export default function Home() {
 
                   {/* E. VOLUNTEER AI SUPPORT TAB */}
                   {activeTab === "volunteer" && (
-                    <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
+                    <div className="glass-card p-6">
                       <div className="flex items-center gap-2 mb-4">
-                        <Users className="w-5 h-5 text-emerald-600" />
-                        <h2 className="text-sm font-bold uppercase tracking-wider text-[#111827]">Volunteer Resource Dispatch Console</h2>
+                        <Users className="w-5 h-5 text-emerald-450" />
+                        <h2 className="text-sm font-bold uppercase tracking-wider text-slate-200">Volunteer Resource Dispatch Console</h2>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                          <label htmlFor="volunteer-badge-tab" className="text-xs font-bold text-[#6B7280] block mb-1">Badge Reference ID</label>
+                          <label htmlFor="volunteer-badge-tab" className="text-xs font-bold text-slate-400 block mb-1.5">Badge Reference ID</label>
                           <input 
                             id="volunteer-badge-tab"
                             type="text" 
                             value={volunteerId} 
                             onChange={(e) => setVolunteerId(e.target.value)}
-                            className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
+                            className="w-full bg-slate-950/60 border border-white/10 rounded-xl py-2.5 px-3.5 text-sm outline-none text-white focus:bg-slate-955 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all placeholder:text-slate-500"
                           />
                         </div>
                         <div>
-                          <label htmlFor="volunteer-sector-tab" className="text-xs font-bold text-[#6B7280] block mb-1">Sector coordinates</label>
+                          <label htmlFor="volunteer-sector-tab" className="text-xs font-bold text-slate-400 block mb-1.5">Sector coordinates</label>
                           <input 
                             id="volunteer-sector-tab"
                             type="text" 
                             value={volunteerLoc} 
                             onChange={(e) => setVolunteerLoc(e.target.value)}
-                            className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-sm outline-none text-[#111827]"
+                            className="w-full bg-slate-950/60 border border-white/10 rounded-xl py-2.5 px-3.5 text-sm outline-none text-white focus:bg-slate-955 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all placeholder:text-slate-500"
                           />
                         </div>
                       </div>
 
                       <div className="mb-4">
-                        <label htmlFor="volunteer-query-tab" className="text-xs font-bold text-[#6B7280] block mb-1">Query input</label>
+                        <label htmlFor="volunteer-query-tab" className="text-xs font-bold text-slate-400 block mb-1.5">Query input</label>
                         <div className="flex gap-2">
                           <input 
                             id="volunteer-query-tab"
                             type="text" 
                             value={volunteerQuery} 
                             onChange={(e) => setVolunteerQuery(e.target.value)}
-                            className="flex-1 bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2.5 px-3 text-sm outline-none text-[#111827]"
+                            className="flex-1 bg-slate-950/60 border border-white/10 rounded-xl py-2.5 px-3.5 text-sm outline-none text-white focus:bg-slate-955 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all placeholder:text-slate-500"
                           />
                           <button 
                             onClick={() => handleVolunteerAsk()}
                             aria-label="Dispatch query"
-                            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg"
+                            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 transition-all rounded-xl text-xs font-bold text-white uppercase tracking-wider shadow-sm hover:shadow active:scale-[0.99] cursor-pointer"
                           >
                             Dispatch
                           </button>
@@ -913,36 +760,341 @@ export default function Home() {
                       </div>
 
                       {volunteerResult && (
-                        <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-xs space-y-2">
-                          <p className="text-emerald-700 font-bold">Target sector allocation: {volunteerResult.assigned_zone}</p>
-                          <p className="text-slate-700">Action description: {volunteerResult.task_description}</p>
-                          <p className="text-slate-500">Risk category: {volunteerResult.urgency_level}</p>
+                        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs space-y-2">
+                          <p className="text-emerald-400 font-bold">Target sector allocation: {volunteerResult.assigned_zone}</p>
+                          <p className="text-slate-300">Action description: {volunteerResult.task_description}</p>
+                          <p className="text-slate-400">Risk category: {volunteerResult.urgency_level}</p>
                         </div>
                       )}
+                    </div>
+                  )}
+
+                  {/* F. AI COMMANDER CENTRAL COMMAND TAB */}
+                  {activeTab === "commander" && (
+                    <div className="space-y-8">
+                      <div className="glass-card p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                          <BrainCircuit className="w-5 h-5 text-indigo-400" />
+                          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-200">AI Commander Co-pilot</h2>
+                        </div>
+                        <p className="text-xs text-slate-400 mb-4">Select a scenario to simulate automated operational adjustments across all systems.</p>
+                        
+                        <div className="mb-4">
+                          <label htmlFor="scen-select-center" className="text-xs font-bold text-slate-400 block mb-1.5">Active Scenario Selection</label>
+                          <select
+                            id="scen-select-center"
+                            value={scenario}
+                            onChange={(e) => setScenario(e.target.value)}
+                            className="w-full bg-slate-950/60 border border-white/10 rounded-xl py-2.5 px-3.5 text-xs outline-none text-white focus:bg-slate-955 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition cursor-pointer"
+                          >
+                            <option value="Sudden heavy rainstorm during egress peak">Sudden heavy rainstorm during egress peak</option>
+                            <option value="Public metro line failure in zone C corridor">Public metro line failure in zone C corridor</option>
+                            <option value="Security alert near Gate B concourse">Security alert near Gate B concourse</option>
+                          </select>
+                        </div>
+
+                        <button 
+                          onClick={handleTriggerDecision}
+                          disabled={loading}
+                          className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-850 transition rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer"
+                        >
+                          Orchestrate Coordinated Plan
+                        </button>
+
+                        {decisionResult && (
+                          <div className="mt-6 p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl space-y-3">
+                            <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest block">Commander Reasoning Stream</span>
+                            <div className="text-xs space-y-2 text-slate-300">
+                              {decisionResult.reasoning_steps.map((step: string, idx: number) => (
+                                <p key={idx} className="flex gap-2">
+                                  <span className="text-indigo-400 font-bold">•</span>
+                                  {step}
+                                </p>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* G. SECURITY & ACCESS TAB */}
+                  {activeTab === "security" && (
+                    <div className="space-y-8">
+                      <div className="glass-card p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Shield className="w-5 h-5 text-indigo-400" />
+                          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-200">Security Command Console</h2>
+                        </div>
+                        <p className="text-xs text-slate-400 mb-6">Monitor access control points, metal detectors, and perimeter fences across SoFi Stadium.</p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                          <div className="p-4 bg-slate-900/60 border border-white/10 rounded-xl text-center">
+                            <span className="text-[9px] text-slate-400 block font-semibold uppercase">Perimeter Fence</span>
+                            <strong className="text-sm text-emerald-450 font-black">SECURE</strong>
+                          </div>
+                          <div className="p-4 bg-slate-900/60 border border-white/10 rounded-xl text-center">
+                            <span className="text-[9px] text-slate-400 block font-semibold uppercase">Metal Detectors</span>
+                            <strong className="text-sm text-emerald-450 font-black">100% ONLINE</strong>
+                          </div>
+                          <div className="p-4 bg-slate-900/60 border border-white/10 rounded-xl text-center">
+                            <span className="text-[9px] text-slate-400 block font-semibold uppercase">Active Patrols</span>
+                            <strong className="text-sm text-white font-black">42 Teams</strong>
+                          </div>
+                        </div>
+
+                        <button 
+                          onClick={() => {
+                            setTimeline((prev) => [
+                              { id: Date.now(), time: "Just Now", title: "Security Scan Completed", detail: "Perimeter status verified as fully secure." },
+                              ...prev
+                            ]);
+                            alert("Security sweep initiated successfully. All points secure.");
+                          }}
+                          className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 transition rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer"
+                        >
+                          Run Full Security Sweep
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* H. ACCESSIBILITY TAB */}
+                  {activeTab === "accessibility" && (
+                    <div className="space-y-8">
+                      <div className="glass-card p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Accessibility className="w-5 h-5 text-indigo-400" />
+                          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-200">Accessibility & Wheelchair Dispatcher</h2>
+                        </div>
+                        <p className="text-xs text-slate-400 mb-6">Coordinate special assistance, golf carts, wheelchair routing, and priority elevator status.</p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                          <div className="p-4 bg-slate-900/60 border border-white/10 rounded-xl">
+                            <span className="text-[9px] text-slate-400 block font-semibold uppercase mb-1">Elevator Status</span>
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="text-slate-300">Elevators 1-8 (West Plaza)</span>
+                              <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-450 text-[10px] font-bold border border-emerald-500/20">Operational</span>
+                            </div>
+                          </div>
+                          <div className="p-4 bg-slate-900/60 border border-white/10 rounded-xl">
+                            <span className="text-[9px] text-slate-400 block font-semibold uppercase mb-1">Assisted Carts</span>
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="text-slate-300">Available Carts</span>
+                              <strong className="text-slate-200">12 / 15 Active</strong>
+                            </div>
+                          </div>
+                        </div>
+
+                        <button 
+                          onClick={() => {
+                            setTimeline((prev) => [
+                              { id: Date.now(), time: "Just Now", title: "Cart Dispatched", detail: "Assisted golf cart sent to Gate C elevator lobby." },
+                              ...prev
+                            ]);
+                            alert("Accessibility golf cart dispatched successfully to Gate C.");
+                          }}
+                          className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 transition rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer"
+                        >
+                          Dispatch Assisted Golf Cart
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* I. CROWD INTELLIGENCE TAB */}
+                  {activeTab === "intelligence" && (
+                    <div className="space-y-8">
+                      <div className="glass-card p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Users className="w-5 h-5 text-indigo-400" />
+                          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-200">Crowd Intelligence & Density Map</h2>
+                        </div>
+                        <p className="text-xs text-slate-400 mb-6">Real-time occupancy tracking across stadium tiers and gates using security camera feeds.</p>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-slate-300">
+                          <div className="p-4 bg-slate-900/60 border border-white/10 rounded-xl">
+                            <h4 className="font-bold text-white mb-2">Gate Traffic Flow Rates</h4>
+                            <ul className="space-y-2">
+                              <li className="flex justify-between"><span>Gate A (North)</span><strong className="text-amber-400">72% Capacity</strong></li>
+                              <li className="flex justify-between"><span>Gate B (Northeast)</span><strong className="text-emerald-450">48% Capacity</strong></li>
+                              <li className="flex justify-between"><span>Gate C (East Lobby)</span><strong className="text-red-400">92% Capacity</strong></li>
+                            </ul>
+                          </div>
+                          <div className="p-4 bg-slate-900/60 border border-white/10 rounded-xl">
+                            <h4 className="font-bold text-white mb-2">Average Transit Velocity</h4>
+                            <ul className="space-y-2">
+                              <li className="flex justify-between"><span>Concourse Level 1</span><strong className="text-emerald-450">1.4 m/s (Optimal)</strong></li>
+                              <li className="flex justify-between"><span>Plaza Access Bridges</span><strong className="text-amber-400">0.8 m/s (Moderate)</strong></li>
+                              <li className="flex justify-between"><span>Metro Shuttle Line</span><strong className="text-red-400">0.3 m/s (Congested)</strong></li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* J. TRANSPORTATION TAB */}
+                  {activeTab === "transportation" && (
+                    <div className="space-y-8">
+                      <div className="glass-card p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Bus className="w-5 h-5 text-indigo-400" />
+                          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-200">Transportation & Transit Control</h2>
+                        </div>
+                        <p className="text-xs text-slate-400 mb-6">Manage external shuttle buses, metro scheduling, and coordinate parking garage updates.</p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                          <div className="p-4 bg-slate-900/60 border border-white/10 rounded-xl text-center">
+                            <span className="text-[9px] text-slate-400 block font-semibold uppercase">Metro Wait Time</span>
+                            <strong className="text-sm text-slate-100 font-black">6 Min Delay</strong>
+                          </div>
+                          <div className="p-4 bg-slate-900/60 border border-white/10 rounded-xl text-center">
+                            <span className="text-[9px] text-slate-400 block font-semibold uppercase">Shuttle Frequency</span>
+                            <strong className="text-sm text-slate-100 font-black">Every 3 Mins</strong>
+                          </div>
+                          <div className="p-4 bg-slate-900/60 border border-white/10 rounded-xl text-center">
+                            <span className="text-[9px] text-slate-400 block font-semibold uppercase">Taxi Queues</span>
+                            <strong className="text-sm text-slate-100 font-black">12 Min Wait</strong>
+                          </div>
+                        </div>
+
+                        <button 
+                          onClick={() => {
+                            setTimeline((prev) => [
+                              { id: Date.now(), time: "Just Now", title: "Metro Frequencies Adjusted", detail: "Metro operators agreed to run extra trains to clear Sector C crowds." },
+                              ...prev
+                            ]);
+                            alert("Requested additional metro trains to relieve Gate C egress load.");
+                          }}
+                          className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 transition rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer"
+                        >
+                          Request Extra Metro Trains
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* K. REPORTS & ANALYTICS TAB */}
+                  {activeTab === "reports" && (
+                    <div className="space-y-8">
+                      <div className="glass-card p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                          <BarChart4 className="w-5 h-5 text-indigo-400" />
+                          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-200">Reports & Incident Logs Analytics</h2>
+                        </div>
+                        <p className="text-xs text-slate-400 mb-6">Compile full incident summary reports and export operational data files.</p>
+
+                        <div className="p-4 bg-slate-900/60 border border-white/10 rounded-xl text-xs text-slate-300 space-y-2 mb-6">
+                          <p><strong>Total Active Incidents Today:</strong> 12 reported / 11 resolved</p>
+                          <p><strong>Peak Occupancy Level:</strong> 62,845 attendees (78%) at 18:45</p>
+                          <p><strong>Average Response Time:</strong> 2.4 minutes across all EMS calls</p>
+                        </div>
+
+                        <button 
+                          onClick={() => alert("Downloading Operations Summary PDF report...")}
+                          className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 transition rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer"
+                        >
+                          Export Operations PDF Report
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* L. SIMULATION TAB */}
+                  {activeTab === "simulation" && (
+                    <div className="space-y-8">
+                      <div className="glass-card p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                          <HelpCircle className="w-5 h-5 text-indigo-400" />
+                          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-200">Simulation Control Center</h2>
+                        </div>
+                        <p className="text-xs text-slate-400 mb-6">Simulate hypothetical match scenarios to stress-test exit route plans and safety logistics.</p>
+
+                        <div className="mb-6 text-xs text-slate-300 space-y-2">
+                          <p><strong>Simulated Scenario:</strong> Public metro line failure in zone C corridor</p>
+                          <p><strong>Estimated Impact:</strong> Exit congestion increases by 35% around East gates</p>
+                        </div>
+
+                        <button 
+                          onClick={() => alert("Starting mock crowd simulation run...")}
+                          className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 transition rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer"
+                        >
+                          Run exit stress simulation
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* M. DOCUMENT CENTER TAB */}
+                  {activeTab === "documents" && (
+                    <div className="space-y-8">
+                      <div className="glass-card p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                          <FileText className="w-5 h-5 text-indigo-400" />
+                          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-200">Document Center</h2>
+                        </div>
+                        <p className="text-xs text-slate-400 mb-6">Access official manuals, FIFA safety codes, and operational guidelines.</p>
+
+                        <div className="space-y-3 text-xs text-slate-300">
+                          <div className="p-3 bg-slate-900/60 border border-white/10 rounded-xl flex justify-between items-center">
+                            <span>FIFA World Cup 2026 Venue Security Manual</span>
+                            <span className="text-[10px] text-indigo-400 hover:underline cursor-pointer">Open PDF</span>
+                          </div>
+                          <div className="p-3 bg-slate-900/60 border border-white/10 rounded-xl flex justify-between items-center">
+                            <span>Emergency Evacuation Route Maps (SoFi Stadium)</span>
+                            <span className="text-[10px] text-indigo-400 hover:underline cursor-pointer">Open PDF</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
 
                 </motion.div>
               </AnimatePresence>
             </div>
-
             {/* Right sidebar AI Commander Panel (Persistent on desktop) */}
-            <div className="space-y-8">
+            <div className="space-y-6">
               
+              {/* Search and Voice AI Controls */}
+              <div className="flex gap-2">
+                <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl border border-white/10 bg-slate-900/60 focus-within:bg-slate-900 focus-within:ring-1 focus-within:ring-indigo-500/30 focus-within:border-indigo-500 transition-all cursor-pointer" onClick={() => setIsCommandPaletteOpen(true)}>
+                  <Search className="w-3.5 h-3.5 text-slate-400" />
+                  <input 
+                    type="text" 
+                    placeholder="Search Command" 
+                    readOnly
+                    className="bg-transparent text-[11px] outline-none text-white placeholder-slate-500 cursor-pointer w-full"
+                  />
+                  <kbd className="bg-slate-850 border border-white/10 text-[8px] px-1.5 py-0.5 rounded font-bold text-slate-400">⌘K</kbd>
+                </div>
+                <button
+                  onClick={handleVoiceInput}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold text-[10px] uppercase tracking-wider transition cursor-pointer shadow-lg ${
+                    isListening 
+                      ? "bg-red-600 text-white animate-pulse shadow-red-500/20" 
+                      : "bg-[#4F46E5] hover:bg-indigo-700 text-white shadow-indigo-500/10"
+                  }`}
+                >
+                  <Mic className="w-3.5 h-3.5" />
+                  <span>{isListening ? "Listening..." : "Voice AI"}</span>
+                </button>
+              </div>
+
               {/* Scenario Decision Trigger (Moved to persistent sidebar for superior UX) */}
-              <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
+              <div className="glass-card p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <Megaphone className="w-5 h-5 text-indigo-500 animate-bounce" />
-                  <h3 className="text-xs font-bold text-[#111827]">Operations Co-pilot</h3>
+                  <Megaphone className="w-5 h-5 text-indigo-400 animate-bounce" />
+                  <h3 className="text-xs font-bold text-slate-200">Operations Co-pilot</h3>
                 </div>
 
                 <div className="mb-4">
-                  <label htmlFor="scen-select" className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Active Scenario</label>
+                  <label htmlFor="scen-select" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Active Scenario</label>
                   <select
                     id="scen-select"
                     value={scenario}
                     onChange={(e) => setScenario(e.target.value)}
-                    className="w-full bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-xs outline-none text-[#111827]"
+                    className="w-full bg-slate-950/60 border border-white/10 rounded-xl py-2 px-3 text-xs outline-none text-white focus:bg-slate-955 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition cursor-pointer"
                   >
                     <option value="Sudden heavy rainstorm during egress peak">Sudden heavy rainstorm during egress peak</option>
                     <option value="Public metro line failure in zone C corridor">Public metro line failure in zone C corridor</option>
@@ -953,7 +1105,7 @@ export default function Home() {
                 <button 
                   onClick={handleTriggerDecision}
                   disabled={loading}
-                  className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white transition rounded-lg text-[10px] font-bold uppercase tracking-wider"
+                  className="w-full py-2.5 bg-indigo-650 hover:bg-indigo-700 active:bg-indigo-800 text-white transition rounded-xl text-[10px] font-bold uppercase tracking-wider cursor-pointer"
                 >
                   Orchestrate Coordinated Plan
                 </button>
@@ -972,138 +1124,51 @@ export default function Home() {
                   </div>
                 )}
               </div>
-
-              {/* AI Commander Panel */}
-              <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm space-y-6">
-                <div className="flex justify-between items-center pb-4 border-b border-[#E8ECF4]">
+                       {/* AI Commander Panel */}
+              <div className="glass-card p-6 space-y-6">
+                <div className="flex justify-between items-center pb-4 border-b border-white/10">
                   <div className="flex items-center gap-2">
-                    <BrainCircuit className="w-5 h-5 text-[#4F46E5]" />
-                    <h3 className="text-sm font-bold text-[#111827]">AI Commander</h3>
+                    <BrainCircuit className="w-5 h-5 text-indigo-400" />
+                    <h3 className="text-sm font-bold text-slate-200">AI Commander</h3>
                   </div>
-                  <span className="text-[9px] bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                  <span className="text-[9px] bg-emerald-500/10 text-emerald-450 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
                     Online
                   </span>
                 </div>
 
-                {/* Match clock */}
-                <div className="p-4 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl flex justify-between items-center">
-                  <div>
-                    <p className="text-[10px] text-[#6B7280] uppercase tracking-wider font-semibold">Current Match</p>
-                    <strong className="text-xs text-[#111827]">Mexico vs Japan</strong>
-                    <p className="text-[9px] text-[#6B7280]">Group Stage • Match 24</p>
-                  </div>
-                  <span className="bg-red-500 text-white text-[11px] font-black px-2 py-1 rounded">
-                    45:32
-                  </span>
-                </div>
+                             {/* AI Orb Component */}
+                 <AIOrb />
 
-                {/* Critical Alerts */}
-                <div className="space-y-3">
-                  <div className="flex justify-between text-[10px] font-bold text-[#6B7280] uppercase">
-                    <span>Critical Alerts</span>
-                    <span className="text-red-500 bg-red-50 px-1.5 py-0.5 rounded font-black">3</span>
-                  </div>
+                 {/* Match clock */}
+                 <div className="p-4 bg-slate-900/60 border border-white/10 rounded-xl flex justify-between items-center">
+                   <div>
+                     <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Current Match</p>
+                     <strong className="text-xs text-white font-extrabold">Mexico vs Japan</strong>
+                     <p className="text-[9px] text-slate-450">Group Stage • Match 24</p>
+                   </div>
+                   <span className="bg-red-650 text-white text-[11px] font-black px-2 py-1 rounded-md shadow-sm shadow-red-500/10">
+                     45:32
+                   </span>
+                 </div>
 
-                  <div className="p-3 bg-red-50/50 border border-red-100 rounded-xl space-y-1">
-                    <p className="text-xs font-bold text-red-700">Gate C Overcrowding</p>
-                    <p className="text-[10px] text-red-600">Risk Level: High</p>
-                  </div>
-                  
-                  <div className="p-3 bg-amber-50/50 border border-amber-100 rounded-xl space-y-1">
-                    <p className="text-xs font-bold text-amber-700">Heavy Rain Incoming</p>
-                    <p className="text-[10px] text-amber-600">ETA: 32 minutes</p>
-                  </div>
-                </div>
+                 {/* Alert Panel Component */}
+                 <AlertPanel />
 
-                {/* AI Recommended Actions checklist */}
-                <div className="space-y-3">
-                  <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-widest block">AI Recommended Actions</span>
-                  
-                  <div className="space-y-2">
-                    {Object.keys(approvals).map((actName) => {
-                      const details = approvals[actName];
-                      return (
-                        <div key={actName} className="p-3 bg-white border border-[#E8ECF4] rounded-xl flex items-center justify-between shadow-sm">
-                          <div className="min-w-0 flex-1 pr-2">
-                            <strong className="text-xs text-[#111827] block truncate">{actName}</strong>
-                            <p className="text-[9px] text-[#6B7280]">Impact: {details.impact} • {details.confidence} confidence</p>
-                          </div>
-                          
-                          <div>
-                            {details.status === "PENDING" ? (
-                              <button 
-                                onClick={() => handleActionApproval(actName, "APPROVED")}
-                                className="py-1 px-3 bg-[#4F46E5] hover:bg-indigo-700 text-white rounded text-[10px] font-bold uppercase transition"
-                              >
-                                Approve
-                              </button>
-                            ) : (
-                              <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded uppercase">
-                                Approved
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                 {/* Action Cards Component */}
+                 <RecommendationCard
+                   approvals={approvals}
+                   onApprove={handleActionApproval}
+                   onApproveAll={() => {
+                     Object.keys(approvals).forEach(k => handleActionApproval(k, "APPROVED"));
+                   }}
+                 />
 
-                  <button 
-                    onClick={() => {
-                      Object.keys(approvals).forEach(k => handleActionApproval(k, "APPROVED"));
-                    }}
-                    className="w-full mt-2 py-2 bg-[#4F46E5] hover:bg-indigo-700 text-white transition rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm"
-                  >
-                    Approve All Recommendations
-                  </button>
-                </div>
-
-                {/* Commander Query Input */}
-                <div className="border-t border-[#E8ECF4] pt-4">
-                  <label htmlFor="commander-ask-side" className="sr-only">Ask StadiumMind AI</label>
-                  <div className="flex gap-2">
-                    <input 
-                      id="commander-ask-side"
-                      type="text"
-                      placeholder="Ask StadiumMind AI..."
-                      className="flex-1 bg-[#F7F8FC] border border-[#E8ECF4] rounded-lg py-2 px-3 text-xs outline-none text-[#111827] placeholder-[#6B7280]"
-                    />
-                    <button 
-                      aria-label="Send Query"
-                      className="p-2 bg-[#F7F8FC] border border-[#E8ECF4] hover:bg-slate-100 rounded-lg"
-                    >
-                      <Send className="w-3.5 h-3.5 text-[#6B7280]" />
-                    </button>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* AI Insights List */}
-              <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xs font-bold text-[#111827]">AI Insights</h3>
-                  <span className="w-2 h-2 rounded-full bg-[#16A34A] animate-pulse" />
-                </div>
-
-                <div className="space-y-3.5 text-xs">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[#111827] font-semibold">Gate C congestion increasing</span>
-                    <span className="text-[9px] text-[#6B7280]">2 min ago</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[#111827] font-semibold">Rain probability in 30 mins</span>
-                    <span className="text-[9px] text-[#6B7280]">5 min ago</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[#111827] font-semibold">Spanish help requests</span>
-                    <span className="text-[9px] text-[#6B7280]">7 min ago</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[#111827] font-semibold">Waste collection behind</span>
-                    <span className="text-[9px] text-[#6B7280]">10 min ago</span>
-                  </div>
-                </div>
+                 {/* AI Chat Widget Component */}
+                 <AIChatWidget
+                   value={commanderQuery}
+                   onChange={setCommanderQuery}
+                   onSend={handleCommanderAsk}
+                 />
               </div>
 
             </div>
@@ -1112,79 +1177,50 @@ export default function Home() {
 
         </div>
 
-        {/* Bottom row widgets: Incident Log Timeline & 6 deployment pills */}
+        {/* Full-width StatsCard component row spanning the entire page */}
+        <div className="w-full px-4 md:px-8 lg:px-12 pb-8">
+          <StatsCard volunteersCount={1248} />
+        </div>
+
+        {/* Bottom row widgets: Incident Log Timeline & AI Insights */}
         <div className="w-full px-4 md:px-8 lg:px-12 pb-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Live Incident Timeline list */}
-          <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm lg:col-span-2">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xs font-bold text-[#111827]">Live Incident Timeline</h3>
-              <button className="text-[10px] text-[#4F46E5] font-bold hover:underline">View All</button>
-            </div>
-            
-            <div className="space-y-4 max-h-60 overflow-y-auto">
-              {timeline.map((evt) => (
-                <div key={evt.id} className="relative pl-4 border-l border-[#E8ECF4] text-xs">
-                  <span className="absolute top-1 left-[-4px] w-2 h-2 rounded-full bg-[#4F46E5]" />
-                  <div className="flex justify-between text-[10px] text-[#6B7280] font-bold mb-0.5">
-                    <span>{evt.title}</span>
-                    <span>{evt.time}</span>
-                  </div>
-                  <p className="text-[11px] text-[#6B7280] leading-relaxed">{evt.detail}</p>
-                </div>
-              ))}
-            </div>
+          <div className="lg:col-span-2">
+            <Timeline timeline={timeline} />
           </div>
 
-          {/* 6 Bottom Metric pills */}
-          <div className="bg-white border border-[#E8ECF4] p-6 rounded-2xl shadow-sm space-y-4">
-            <h3 className="text-xs font-bold text-[#111827] mb-2">Resource Deployments</h3>
-            
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="p-3 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-center">
-                <span className="text-[9px] text-[#6B7280] block font-semibold uppercase">Active Volunteers</span>
-                <strong className="text-sm text-[#111827]">1,248</strong>
+          <div>
+            <div className="glass-card p-6 h-[350px]">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xs font-bold text-slate-200">AI Insights</h3>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               </div>
-              <div className="p-3 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-center">
-                <span className="text-[9px] text-[#6B7280] block font-semibold uppercase">Medical Teams</span>
-                <strong className="text-sm text-[#111827]">24</strong>
-              </div>
-              <div className="p-3 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-center">
-                <span className="text-[9px] text-[#6B7280] block font-semibold uppercase">Shuttle Buses</span>
-                <strong className="text-sm text-[#111827]">78</strong>
-              </div>
-              <div className="p-3 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-center">
-                <span className="text-[9px] text-[#6B7280] block font-semibold uppercase">Parking Occupancy</span>
-                <strong className="text-sm text-[#111827]">89%</strong>
-              </div>
-              <div className="p-3 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-center">
-                <span className="text-[9px] text-[#6B7280] block font-semibold uppercase">Energy Usage</span>
-                <strong className="text-sm text-[#111827]">72%</strong>
-              </div>
-              <div className="p-3 bg-[#F7F8FC] border border-[#E8ECF4] rounded-xl text-center">
-                <span className="text-[9px] text-[#6B7280] block font-semibold uppercase">Waste Collected</span>
-                <strong className="text-sm text-[#111827]">4.2 tons</strong>
+
+              <div className="space-y-3.5 text-xs">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-300 font-semibold">Gate C congestion increasing</span>
+                  <span className="text-[9px] text-slate-450">2 min ago</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-300 font-semibold">Rain probability in 30 mins</span>
+                  <span className="text-[9px] text-slate-450">5 min ago</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-300 font-semibold">Spanish help requests</span>
+                  <span className="text-[9px] text-slate-450">7 min ago</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-300 font-semibold">Waste collection behind</span>
+                  <span className="text-[9px] text-slate-450">10 min ago</span>
+                </div>
               </div>
             </div>
           </div>
 
         </div>
 
-        {/* Footer info bar */}
-        <footer className="border-t border-[#E8ECF4] bg-white py-3.5 text-xs text-[#6B7280]">
-          <div className="w-full px-4 md:px-8 lg:px-12 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-              <span className="font-semibold text-[#111827]">Live Operations</span>
-              <span>• Last updated: 19:03:24 IST</span>
-            </div>
-            <div className="flex gap-6">
-              <span>Sensors: 1,248 Online</span>
-              <span>Avg Response: 120ms</span>
-              <span className="font-semibold text-[#111827]">Data Source: Multi-Channel Fusion</span>
-            </div>
-          </div>
-        </footer>
+        {/* Footer Status Bar Component */}
+        <FooterStatus />
 
       </div>
     </div>
