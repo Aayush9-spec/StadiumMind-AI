@@ -1,4 +1,6 @@
-const API_BASE = "https://stadiummind-ai.onrender.com/api/v1";
+const API_BASE = typeof window !== "undefined" 
+  ? (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1")
+  : (process.env.NEXT_PUBLIC_API_URL || "https://stadiummind-ai.onrender.com/api/v1");
 const TOKEN = "stadiummind_eval_secret_token_12345"; // matches backend defaults
 
 async function def_fetch(endpoint: string, options: RequestInit = {}) {
