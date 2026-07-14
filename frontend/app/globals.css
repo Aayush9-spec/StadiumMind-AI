@@ -1,36 +1,37 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0f172a;
+  --background: #04091a;
   --foreground: #f8fafc;
-  --card-bg: rgba(15, 23, 42, 0.65);
-  --card-border: rgba(255, 255, 255, 0.08);
-  --accent-glow: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-  --success-glow: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  --warning-glow: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  --danger-glow: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  --font-inter: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 body {
-  background: radial-gradient(circle at top left, #1e1b4b 0%, #0f172a 60%);
-  color: var(--foreground);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background: 
+    radial-gradient(circle at 50% 0%, #0e224e 0%, #040817 100%),
+    url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1200&auto=format&fit=crop') no-repeat center top fixed;
+  background-size: cover;
+  color: #F8FAFC;
+  font-family: var(--font-inter), system-ui, sans-serif;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Glassmorphism Styles */
-.glass-panel {
-  background: var(--card-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--card-border);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+/* Glassmorphism Futuristic Cards */
+.glass-card {
+  background: rgba(8, 15, 37, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  border-radius: 16px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.glass-panel:hover {
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5);
+.glass-card:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.6), 0 0 15px rgba(99, 102, 241, 0.1);
 }
 
 /* Custom Scrollbar */
@@ -40,24 +41,50 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(4, 9, 26, 0.5);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.2);
 }
 
-/* Leaflet Dark Theme Adjustments */
-.leaflet-container {
-  background: #1e293b !important;
-  border-radius: 0.75rem;
+/* AI Orb Keyframe Animations */
+.orb-glow {
+  position: relative;
+  border-radius: 50%;
+  background: radial-gradient(circle, #818cf8 0%, #4f46e5 50%, #1e1b4b 100%);
+  box-shadow: 0 0 35px 8px rgba(99, 102, 241, 0.45), inset 0 0 15px rgba(255, 255, 255, 0.5);
+  animation: orbPulse 4s ease-in-out infinite, orbRotate 16s linear infinite;
 }
 
-.leaflet-tile {
-  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+@keyframes orbPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 35px 8px rgba(99, 102, 241, 0.45), inset 0 0 15px rgba(255, 255, 255, 0.5);
+  }
+  50% {
+    transform: scale(1.06);
+    box-shadow: 0 0 50px 12px rgba(99, 102, 241, 0.6), inset 0 0 25px rgba(255, 255, 255, 0.7);
+  }
+}
+
+@keyframes orbRotate {
+  0% {
+    filter: hue-rotate(0deg);
+  }
+  100% {
+    filter: hue-rotate(360deg);
+  }
+}
+
+/* Custom focus states */
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.15);
 }
