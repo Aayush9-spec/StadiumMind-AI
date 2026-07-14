@@ -118,7 +118,7 @@ async def volunteer_ask(payload: VolunteerQueryRequest, request: Request):
     sanitized_query = sanitize_input(payload.query)
     prompt = f"Volunteer (ID: {payload.volunteer_id}) asks: '{sanitized_query}' from location: '{payload.current_location}'. Return the assigned zone, short task description, and urgency."
     
-    ai_res = ai_engine.run_prompt(prompt)
+    ai_res = ai_engine.run_prompt(prompt, schema_class=VolunteerQueryResponse)
     if isinstance(ai_res, dict) and "assigned_zone" in ai_res:
         return VolunteerQueryResponse(**ai_res)
         
@@ -151,7 +151,7 @@ async def emergency_report(payload: EmergencyReportRequest, request: Request):
     sanitized_text = sanitize_input(payload.incident_text)
     prompt = f"Emergency Alert reported: '{sanitized_text}'. Extract the exact section location, determine severity level (LOW, MEDIUM, CRITICAL), assign the nearest unit, suggest route, and estimate ETA."
     
-    ai_res = ai_engine.run_prompt(prompt)
+    ai_res = ai_engine.run_prompt(prompt, schema_class=EmergencyReportResponse)
     if isinstance(ai_res, dict) and "extracted_location" in ai_res:
         return EmergencyReportResponse(**ai_res)
         
@@ -170,7 +170,7 @@ async def decision_trigger(payload: DecisionTriggerRequest, request: Request):
     sanitized_scenario = sanitize_input(payload.event_scenario)
     prompt = f"Operational change: '{sanitized_scenario}'. Detail primary event, list cascading consequences, outline recommended operations coordinator actions, and reasoning steps."
     
-    ai_res = ai_engine.run_prompt(prompt)
+    ai_res = ai_engine.run_prompt(prompt, schema_class=DecisionTriggerResponse)
     if isinstance(ai_res, dict) and "primary_event" in ai_res:
         return DecisionTriggerResponse(**ai_res)
         
@@ -188,7 +188,7 @@ async def incident_generate(payload: IncidentGeneratorRequest, request: Request)
     sanitized_text = sanitize_input(payload.staff_raw_text)
     prompt = f"Staff raw report: '{sanitized_text}'. Generate incident summary, severity, recommended actions, resources required, time estimate, and escalation level."
     
-    ai_res = ai_engine.run_prompt(prompt)
+    ai_res = ai_engine.run_prompt(prompt, schema_class=IncidentReportResponse)
     if isinstance(ai_res, dict) and "summary" in ai_res:
         return IncidentReportResponse(**ai_res)
         
