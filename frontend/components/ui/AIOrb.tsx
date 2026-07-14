@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function AIOrb() {
+function AIOrb() {
   return (
     <div className="flex items-center justify-center py-6 bg-slate-900/40 rounded-2xl border border-white/5 relative overflow-hidden">
       
@@ -44,3 +44,5 @@ export default function AIOrb() {
     </div>
   );
 }
+
+export default React.memo(AIOrb);
