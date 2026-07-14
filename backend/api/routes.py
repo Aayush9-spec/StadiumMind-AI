@@ -17,29 +17,38 @@ from backend.services.ai_engine import ai_engine
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1")
 
+# Global cache variables for weather
+cached_weather_str = "Optimal (Clear, 24°C)"
+last_weather_fetch = 0.0
+
 @router.get("/telemetry", dependencies=[Depends(verify_token)])
 async def get_telemetry(request: Request):
     """
     Returns real-time telemetry metrics for the stadium dashboard.
-    Fetches real weather data from Open-Meteo API.
+    Fetches real weather data from Open-Meteo API, with a 5-minute cache.
     """
+    global cached_weather_str, last_weather_fetch
     check_rate_limit(request.client.host)
     
-    # 1. Fetch real-world weather data for SoFi Stadium (33.9534, -118.3392)
-    weather_str = "Optimal (Clear, 24°C)"
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                "https://api.open-meteo.com/v1/forecast?latitude=33.9534&longitude=-118.3392&current_weather=true",
-                timeout=3.0
-            )
-            if response.status_code == 200:
-                data = response.json()
-                temp = data["current_weather"]["temperature"]
-                wind = data["current_weather"]["windspeed"]
-                weather_str = f"Live Forecast: {temp}°C, Wind {wind} km/h"
-    except Exception as e:
-        logger.warning(f"Failed to fetch live weather from Open-Meteo: {e}. Using fallback telemetry.")
+    current_time = time.time()
+    if current_time - last_weather_fetch > 300.0:
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    "https://api.open-meteo.com/v1/forecast?latitude=33.9534&longitude=-118.3392&current_weather=true",
+                    timeout=3.0
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    temp = data["current_weather"]["temperature"]
+                    wind = data["current_weather"]["windspeed"]
+                    cached_weather_str = f"Live Forecast: {temp}°C, Wind {wind} km/h"
+                    last_weather_fetch = current_time
+        except Exception as e:
+            logger.warning(f"Failed to fetch live weather from Open-Meteo: {e}. Using fallback telemetry.")
+            # Do not update last_weather_fetch so we try again next time if failed
+    
+    weather_str = cached_weather_str
 
     # 2. Dynamic time-progression simulation
     now = time.localtime()

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ShieldAlert, Activity, Users, Bus, Zap, CloudRain,
@@ -111,7 +111,7 @@ export default function Home() {
 
   const [commanderQuery, setCommanderQuery] = useState("");
 
-  const handleCommanderAsk = async () => {
+  const handleCommanderAsk = useCallback(async () => {
     if (!commanderQuery.trim()) return;
     setLoading(true);
     try {
@@ -126,7 +126,7 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [commanderQuery]);
 
   // Command palette keyboard listener
   useEffect(() => {
@@ -140,24 +140,24 @@ export default function Home() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const fetchTelemetry = async () => {
+  const fetchTelemetry = useCallback(async () => {
     try {
       const data = await api.getTelemetry();
       setTelemetry(data);
     } catch (e) {
       console.warn("Failed fetching telemetry from backend, using default mock data.");
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchTelemetry();
     const interval = setInterval(fetchTelemetry, 15000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchTelemetry]);
 
   const recognitionRef = useRef<any>(null);
 
-  const handleVoiceInput = () => {
+  const handleVoiceInput = useCallback(() => {
     if (typeof window === "undefined") return;
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -210,9 +210,9 @@ export default function Home() {
 
     recognitionRef.current = recognition;
     recognition.start();
-  };
+  }, [isListening]);
 
-  const handleCrowdPredict = async () => {
+  const handleCrowdPredict = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.predictCrowd(gateId, currentCount, flowRate);
@@ -226,9 +226,9 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [gateId, currentCount, flowRate]);
 
-  const handleRoutePlan = async () => {
+  const handleRoutePlan = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.planRoute(routeStart, routeEnd, wheelchair, elevator);
@@ -238,9 +238,9 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [routeStart, routeEnd, wheelchair, elevator]);
 
-  const handleVolunteerAsk = async (queryText?: string) => {
+  const handleVolunteerAsk = useCallback(async (queryText?: string) => {
     setLoading(true);
     try {
       const textToUse = queryText || volunteerQuery;
@@ -251,9 +251,9 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [volunteerId, volunteerLoc, volunteerQuery]);
 
-  const handleSustainabilityPredict = async () => {
+  const handleSustainabilityPredict = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.predictSustainability(attendance, temp);
@@ -263,9 +263,9 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [attendance, temp]);
 
-  const handleEmergencyReport = async (customText?: string) => {
+  const handleEmergencyReport = useCallback(async (customText?: string) => {
     setLoading(true);
     try {
       const textToUse = customText || emergencyText;
@@ -280,9 +280,9 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [emergencyText]);
 
-  const handleTriggerDecision = async () => {
+  const handleTriggerDecision = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.triggerDecision(scenario);
@@ -297,9 +297,9 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [scenario]);
 
-  const handleGenerateIncident = async () => {
+  const handleGenerateIncident = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.generateIncidentReport(rawIncidentText);
@@ -309,9 +309,9 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [rawIncidentText]);
 
-  const handleActionApproval = (actionKey: string, status: string) => {
+  const handleActionApproval = useCallback((actionKey: string, status: string) => {
     setApprovals((prev) => ({
       ...prev,
       [actionKey]: { ...prev[actionKey], status }
@@ -320,7 +320,7 @@ export default function Home() {
       { id: Date.now(), time: "Just Now", title: `Decision Approved: ${actionKey}`, detail: `Operations coordinator approved task assignment.` },
       ...prev
     ]);
-  };
+  }, []);
   return (
     <div className={`min-h-screen font-sans relative transition-all duration-300 ${
       highContrast 
