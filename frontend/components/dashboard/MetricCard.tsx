@@ -8,7 +8,7 @@ interface MetricCardProps {
   badgeStyle: "red" | "emerald" | "blue" | "indigo";
   trendText: string;
   accentColor: "red" | "emerald" | "blue" | "indigo";
-  sparklineData?: any[];
+  sparklineData?: { val: number }[];
   sparklineColor?: string;
   icon?: React.ReactNode;
 }

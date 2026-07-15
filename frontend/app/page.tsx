@@ -184,8 +184,9 @@ export default function Home() {
       setVoiceQuery("Listening...");
     };
 
-    recognition.onresult = async (event: any) => {
-      const text = event.results[0][0].transcript;
+    recognition.onresult = async (event: unknown) => {
+      const speechEvent = event as any;
+      const text = speechEvent.results[0][0].transcript;
       setVoiceQuery(text);
       setIsListening(false);
       if (text.toLowerCase().includes("injured") || text.toLowerCase().includes("collapsed") || text.toLowerCase().includes("help")) {
@@ -221,8 +222,8 @@ export default function Home() {
         { id: Date.now(), time: "Just Now", title: "Crowd Prediction Computed", detail: `Gate ${gateId} capacity threshold predicted. status: ${res.congestion_status}.` },
         ...prev
       ]);
-    } catch (e: any) {
-      alert(e.message);
+    } catch (e: unknown) {
+      alert((e as Error).message);
     } finally {
       setLoading(false);
     }
@@ -233,8 +234,8 @@ export default function Home() {
     try {
       const res = await api.planRoute(routeStart, routeEnd, wheelchair, elevator);
       setRouteResult(res);
-    } catch (e: any) {
-      alert(e.message);
+    } catch (e: unknown) {
+      alert((e as Error).message);
     } finally {
       setLoading(false);
     }
@@ -246,8 +247,8 @@ export default function Home() {
       const textToUse = queryText || volunteerQuery;
       const res = await api.askVolunteer(volunteerId, volunteerLoc, textToUse);
       setVolunteerResult(res);
-    } catch (e: any) {
-      alert(e.message);
+    } catch (e: unknown) {
+      alert((e as Error).message);
     } finally {
       setLoading(false);
     }
@@ -258,8 +259,8 @@ export default function Home() {
     try {
       const res = await api.predictSustainability(attendance, temp);
       setSustainabilityResult(res);
-    } catch (e: any) {
-      alert(e.message);
+    } catch (e: unknown) {
+      alert((e as Error).message);
     } finally {
       setLoading(false);
     }
@@ -275,8 +276,8 @@ export default function Home() {
         { id: Date.now(), time: "Just Now", title: "Rescue EMS Dispatched", detail: `${res.dispatched_unit} routed via ${res.suggested_route}. ETA: ${res.eta_minutes} mins.` },
         ...prev
       ]);
-    } catch (e: any) {
-      alert(e.message);
+    } catch (e: unknown) {
+      alert((e as Error).message);
     } finally {
       setLoading(false);
     }
@@ -292,8 +293,8 @@ export default function Home() {
         newApprovals[act] = { status: "PENDING", impact: "High", confidence: "95%" };
       });
       setApprovals(newApprovals);
-    } catch (e: any) {
-      alert(e.message);
+    } catch (e: unknown) {
+      alert((e as Error).message);
     } finally {
       setLoading(false);
     }
@@ -304,8 +305,8 @@ export default function Home() {
     try {
       const res = await api.generateIncidentReport(rawIncidentText);
       setIncidentResult(res);
-    } catch (e: any) {
-      alert(e.message);
+    } catch (e: unknown) {
+      alert((e as Error).message);
     } finally {
       setLoading(false);
     }
@@ -332,7 +333,7 @@ export default function Home() {
       <StadiumBackground />
       
       {/* Main Layout Container */}
-      <div className="relative z-10 flex flex-col min-h-screen">
+      <main className="relative z-10 flex flex-col min-h-screen">
         
         {/* Header Block Component */}
         <Navbar
@@ -1222,7 +1223,7 @@ export default function Home() {
         {/* Footer Status Bar Component */}
         <FooterStatus />
 
-      </div>
+      </main>
     </div>
   );
 }

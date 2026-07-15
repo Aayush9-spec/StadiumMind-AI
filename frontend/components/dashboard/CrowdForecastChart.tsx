@@ -1,8 +1,14 @@
 import React from "react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, Line } from "recharts";
 
+interface CrowdForecastData {
+  time: string;
+  Flow: number;
+  Forecast: number;
+}
+
 interface CrowdForecastChartProps {
-  data: any[];
+  data: CrowdForecastData[];
 }
 
 export default function CrowdForecastChart({ data }: CrowdForecastChartProps) {

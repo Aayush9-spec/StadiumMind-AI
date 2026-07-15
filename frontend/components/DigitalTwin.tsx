@@ -203,7 +203,7 @@ export default function DigitalTwin({ stadiumName, gateStatus, onSelectNode }: D
             >
               3D
             </button>
-            <button className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-white transition cursor-pointer">
+            <button aria-label="Decrease zoom" className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-white transition cursor-pointer">
               <Eye className="w-3.5 h-3.5" />
             </button>
             <div className="w-full h-[1px] bg-white/10" />
@@ -219,7 +219,7 @@ export default function DigitalTwin({ stadiumName, gateStatus, onSelectNode }: D
             >
               <Minus className="w-3.5 h-3.5" />
             </button>
-            <button className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-white transition cursor-pointer">
+            <button aria-label="Switch map layer" className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-white transition cursor-pointer">
               <Maximize2 className="w-3.5 h-3.5" />
             </button>
           </div>

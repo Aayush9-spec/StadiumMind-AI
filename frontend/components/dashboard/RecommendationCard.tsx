@@ -1,7 +1,7 @@
 import React from "react";
 
 interface RecommendationCardProps {
-  approvals: any;
+  approvals: Record<string, { status: string; impact: string; confidence: string }>;
   onApprove: (actionKey: string, status: string) => void;
   onApproveAll: () => void;
 }
