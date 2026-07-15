@@ -157,61 +157,7 @@ export default function Home() {
 
   const recognitionRef = useRef<any>(null);
 
-  const handleVoiceInput = useCallback(() => {
-    if (typeof window === "undefined") return;
 
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert("Speech recognition is not supported in this browser.");
-      return;
-    }
-
-    if (isListening) {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-      setIsListening(false);
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = "en-US";
-
-    recognition.onstart = () => {
-      setIsListening(true);
-      setVoiceQuery("Listening...");
-    };
-
-    recognition.onresult = async (event: unknown) => {
-      const speechEvent = event as any;
-      const text = speechEvent.results[0][0].transcript;
-      setVoiceQuery(text);
-      setIsListening(false);
-      if (text.toLowerCase().includes("injured") || text.toLowerCase().includes("collapsed") || text.toLowerCase().includes("help")) {
-        setEmergencyText(text);
-        setActiveTab("emergency");
-        await handleEmergencyReport(text);
-      } else {
-        setVolunteerQuery(text);
-        setActiveTab("volunteer");
-        await handleVolunteerAsk(text);
-      }
-    };
-
-    recognition.onerror = () => {
-      setIsListening(false);
-      setVoiceQuery("Speech error.");
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
-  }, [isListening]);
 
   const handleCrowdPredict = useCallback(async () => {
     setLoading(true);
@@ -322,6 +268,62 @@ export default function Home() {
       ...prev
     ]);
   }, []);
+
+  const handleVoiceInput = useCallback(() => {
+    if (typeof window === "undefined") return;
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in this browser.");
+      return;
+    }
+
+    if (isListening) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      setIsListening(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+
+    recognition.onstart = () => {
+      setIsListening(true);
+      setVoiceQuery("Listening...");
+    };
+
+    recognition.onresult = async (event: unknown) => {
+      const speechEvent = event as any;
+      const text = speechEvent.results[0][0].transcript;
+      setVoiceQuery(text);
+      setIsListening(false);
+      if (text.toLowerCase().includes("injured") || text.toLowerCase().includes("collapsed") || text.toLowerCase().includes("help")) {
+        setEmergencyText(text);
+        setActiveTab("emergency");
+        await handleEmergencyReport(text);
+      } else {
+        setVolunteerQuery(text);
+        setActiveTab("volunteer");
+        await handleVolunteerAsk(text);
+      }
+    };
+
+    recognition.onerror = () => {
+      setIsListening(false);
+      setVoiceQuery("Speech error.");
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+  }, [isListening, handleEmergencyReport, handleVolunteerAsk]);
   return (
     <div className={`min-h-screen font-sans relative transition-all duration-300 ${
       highContrast 
