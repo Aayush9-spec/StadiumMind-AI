@@ -13,7 +13,7 @@ from backend.models.schemas import (
     ActionPlanRequest, ActionPlanResponse,
     BriefingRequest, BriefingResponse,
     CrowdExplainRequest, CrowdExplainResponse,
-    VolunteerCoordinateRequest, VolunteerCoordinateResponse,
+    VolunteerCoordinateRequest, VolunteerCoordinateResponse, VolunteerAllocationItem,
     ChatQueryRequest, ChatQueryResponse,
     DailyReportRequest, DailyReportResponse
 )
