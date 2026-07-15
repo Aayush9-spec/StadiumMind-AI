@@ -28,7 +28,7 @@ export default function Navbar({
           </div>
           <div>
             <h1 className="text-[15px] font-black tracking-tight flex items-center gap-1.5 text-white leading-none">
-              StadiumMind OS
+              StadiumMind OS - FIFA World Cup 2026
               <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 tracking-wider">ENTERPRISE</span>
             </h1>
             <p className="text-[8px] text-slate-400 font-bold tracking-wider uppercase mt-1">

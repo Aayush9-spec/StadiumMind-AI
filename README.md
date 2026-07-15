@@ -8,12 +8,17 @@
 
 ### 1. Chosen Vertical
 
-* **Stadium Operations & Coordinated Intelligence (AI Stadium Operating System)**: Multi-agent orchestrator managing fans, volunteers, police, stadium staff, and emergency medical teams synchronously.
+* **Smart Stadiums & Tournament Operations**: A GenAI-enabled solution that enhances stadium operations and the overall tournament experience for fans, organizers, volunteers, and venue staff during the **FIFA World Cup 2026**.
 
 ### 2. Approach & Logic
 
-* **Dynamic Telemetry Integration**: Rather than static mocks, the system makes live network requests (e.g. keyless weather data from **Open-Meteo API** matching venue coordinates) and updates parameters dynamically using a state-progression clock logic.
-* **Google GenAI Core**: Utilizes the modern `google-genai` SDK (`google.genai.Client`) to run reasoning chains for emergency routing, incident summarization, and coordinated command dispatch plans.
+* **Compulsory Generative AI Integration**: The solution explicitly leverages Generative AI (Google Gemini 2.5 Flash via `google-genai` SDK) to improve:
+  - **Navigation & Accessibility**: AI-driven accessible route planning for wheelchairs/elevators.
+  - **Crowd Management & Transportation**: Predictive flow AI modeling to ease gate congestion and coordinate metro transit.
+  - **Sustainability**: Real-time AI forecasting for power, water, and waste load tracking.
+  - **Multilingual Assistance**: Transcription and AI translation mapping for international fans.
+  - **Operational Intelligence & Real-Time Decision Support**: AI orchestrator that triggers coordinated multi-step action plans for emergency responses and incident summaries.
+* **Dynamic Telemetry Integration**: Rather than static mocks, the system makes live network requests (e.g., weather data from **Open-Meteo API** matching FIFA World Cup 2026 venue coordinates) and updates parameters dynamically using a state-progression clock logic.
 * **Offline Fallbacks**: Includes a secure local fallback mechanism that serves fully-formed mock intelligence outputs in case the `GEMINI_API_KEY` is not present, ensuring the app remains fully usable under local offline evaluation.
 
 ### 3. How the Solution Works
