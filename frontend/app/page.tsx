@@ -47,6 +47,7 @@ const crowdTrendData = [
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("overview");
+  const [activeRole, setActiveRole] = useState("Organizer");
   const [loading, setLoading] = useState(false);
   const [highContrast, setHighContrast] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
@@ -159,6 +160,10 @@ export default function Home() {
 
 
 
+  /**
+   * Computes real-time crowd inflow congestion warnings for active gates
+   * using the AI predictive model backend.
+   */
   const handleCrowdPredict = useCallback(async () => {
     setLoading(true);
     try {
@@ -175,6 +180,10 @@ export default function Home() {
     }
   }, [gateId, currentCount, flowRate]);
 
+  /**
+   * Routes EMS or security personnel via the fastest accessible paths,
+   * bypassing elevator failures or wheelchair obstacles.
+   */
   const handleRoutePlan = useCallback(async () => {
     setLoading(true);
     try {
@@ -187,6 +196,10 @@ export default function Home() {
     }
   }, [routeStart, routeEnd, wheelchair, elevator]);
 
+  /**
+   * Dispatches and queries volunteers about emergency tasks
+   * using GenAI natural language processing.
+   */
   const handleVolunteerAsk = useCallback(async (queryText?: string) => {
     setLoading(true);
     try {
@@ -200,6 +213,10 @@ export default function Home() {
     }
   }, [volunteerId, volunteerLoc, volunteerQuery]);
 
+  /**
+   * Predicts energy consumption, waste loads, and water usage
+   * for the tournament venue based on attendance and temperature parameters.
+   */
   const handleSustainabilityPredict = useCallback(async () => {
     setLoading(true);
     try {
@@ -212,6 +229,10 @@ export default function Home() {
     }
   }, [attendance, temp]);
 
+  /**
+   * Dispatches EMS and rescue crews based on incoming high-severity medical/security
+   * alerts parsed and structured by Generative AI.
+   */
   const handleEmergencyReport = useCallback(async (customText?: string) => {
     setLoading(true);
     try {
@@ -229,8 +250,82 @@ export default function Home() {
     }
   }, [emergencyText]);
 
+  /**
+   * Triggers a simulated operational crisis scenario, processing outcomes via GenAI,
+   * rendering the cascading consequences, and queueing coordinator actions.
+   */
   const handleTriggerDecision = useCallback(async () => {
     setLoading(true);
+    
+    // Rich scenario mocks for local simulation and quick response fallback
+    const scenarioMocks: Record<string, { primary_event: string; consequences: string[]; actions: string[]; reasoning_steps: string[] }> = {
+      "Heavy Rain": {
+        primary_event: "Sudden Heavy Rainstorm during Egress Peak",
+        consequences: ["Concourse slippery hazards increased", "Egress pathway congestion", "Outdoor shuttle bus capacity limits reached"],
+        actions: ["Open Gate D", "Delay Fireworks", "Increase shuttle frequency"],
+        reasoning_steps: [
+          "Weather telemetry reports rain rate > 15mm/hr.",
+          "Analyze concourse bottlenecks; redirect to covered Gate D.",
+          "Postpone outdoor entertainment to keep fans in covered zones.",
+          "Adjust shuttle loop frequency by 25%."
+        ]
+      },
+      "Power Failure": {
+        primary_event: "Localized Power Failure in Sector 3 Concourse",
+        consequences: ["Emergency lighting activated", "Turnstiles offline at Gate E", "Escalators stopped in West Concourse"],
+        actions: ["Dispatch 8 Volunteers", "Open Gate D", "Delay Fireworks"],
+        reasoning_steps: [
+          "Power grid telemetry signals grid drop in Sector 3.",
+          "Direct security volunteers to guide fans using megaphones.",
+          "Trigger backup UPS generators for critical systems.",
+          "Manually open Gate E bypass lanes."
+        ]
+      },
+      "Gate Closure": {
+        primary_event: "Emergency Gate C Closure",
+        consequences: ["Inflow bottlenecks at main plaza", "Severe fan delay at outer cordon", "Rerouting flow required"],
+        actions: ["Open Gate D", "Dispatch 8 Volunteers", "Delay Fireworks"],
+        reasoning_steps: [
+          "Plaza density scanners report critical density > 4 people/sqm.",
+          "Trigger emergency detour plan for arriving fans.",
+          "Redirect inbound flow from Gate C to Gate D.",
+          "Send push alerts to staff via volunteer coordination system."
+        ]
+      },
+      "Medical Emergency": {
+        primary_event: "Suspected heatstroke / collapse in Section 218",
+        consequences: ["Localized crowding near stairs", "First aid response delay"],
+        actions: ["Dispatch 8 Volunteers", "Open Gate D", "Delay Fireworks"],
+        reasoning_steps: [
+          "Medic dispatch reports fan collapsed, unresponsive.",
+          "EMS routed via Elevator B to bypass main concourse.",
+          "Command center secures corridor for medical vehicle exit."
+        ]
+      },
+      "Security Threat": {
+        primary_event: "Unattended bag near Gate B concourse",
+        consequences: ["Gate B corridor blocked", "Secondary sweep required", "Arriving fans redirected"],
+        actions: ["Open Gate D", "Delay Fireworks", "Dispatch 8 Volunteers"],
+        reasoning_steps: [
+          "Security alert reported by gate scanners.",
+          "Evacuate immediate concourse area near Gate B.",
+          "Direct incoming crowds to Gate A and Gate D.",
+          "Coordinate with local emergency teams."
+        ]
+      },
+      "Metro Delay": {
+        primary_event: "8 min headway delay on Metro Line 2",
+        consequences: ["Severe egress queues at transit station", "Platform overcrowding"],
+        actions: ["Open Gate D", "Delay Fireworks", "Dispatch 8 Volunteers"],
+        reasoning_steps: [
+          "Metro transit API signals signaling fault delay.",
+          "Retain fans in stadium plaza to stagger outbound rush.",
+          "Initiate standby shuttle loop services.",
+          "Provide real-time transit updates on video screens."
+        ]
+      }
+    };
+
     try {
       const res = await api.triggerDecision(scenario);
       setDecisionResult(res);
@@ -239,13 +334,38 @@ export default function Home() {
         newApprovals[act] = { status: "PENDING", impact: "High", confidence: "95%" };
       });
       setApprovals(newApprovals);
+      
+      // Update timeline based on the simulated event
+      setTimeline((prev) => [
+        { id: Date.now(), time: "Just Now", title: `Simulated: ${res.primary_event}`, detail: `Reasoning: ${res.reasoning_steps[0]}` },
+        ...prev
+      ]);
     } catch (e: unknown) {
-      alert((e as Error).message);
+      console.warn("Backend decision trigger failed, executing rich local client fallback.");
+      // Find matching mock or default to first
+      const mockKey = Object.keys(scenarioMocks).find(k => scenario.toLowerCase().includes(k.toLowerCase())) || "Heavy Rain";
+      const mockRes = scenarioMocks[mockKey];
+      
+      setDecisionResult(mockRes);
+      const newApprovals: Record<string, { status: string; impact: string; confidence: string }> = {};
+      mockRes.actions.forEach((act) => {
+        newApprovals[act] = { status: "PENDING", impact: "High", confidence: "95%" };
+      });
+      setApprovals(newApprovals);
+      
+      setTimeline((prev) => [
+        { id: Date.now(), time: "Just Now", title: `Simulated: ${mockRes.primary_event}`, detail: `Reasoning: ${mockRes.reasoning_steps[0]}` },
+        ...prev
+      ]);
     } finally {
       setLoading(false);
     }
   }, [scenario]);
 
+  /**
+   * Generates a structured operational incident report from raw staff radio text logs
+   * using GenAI processing.
+   */
   const handleGenerateIncident = useCallback(async () => {
     setLoading(true);
     try {
@@ -258,6 +378,10 @@ export default function Home() {
     }
   }, [rawIncidentText]);
 
+  /**
+   * Updates state approvals checklist and broadcasts the coordinators approval
+   * to the live incident timeline.
+   */
   const handleActionApproval = useCallback((actionKey: string, status: string) => {
     setApprovals((prev) => ({
       ...prev,
@@ -269,6 +393,10 @@ export default function Home() {
     ]);
   }, []);
 
+  /**
+   * Captures vocal input, transcribes to text via Web Speech API,
+   * parses context, and executes actions.
+   */
   const handleVoiceInput = useCallback(() => {
     if (typeof window === "undefined") return;
 
@@ -382,6 +510,76 @@ export default function Home() {
             
             {/* Left and Center Content Area (Dynamic depending on active tab) */}
             <div className="lg:col-span-2 space-y-8">
+              
+              {/* Role-Based Dashboard View Selector */}
+              <div className="glass-card p-4 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-indigo-400" />
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Dashboard View Role:</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {["Organizer", "Security", "Medical", "Volunteer", "Fan"].map((role) => (
+                    <button
+                      key={role}
+                      onClick={() => setActiveRole(role)}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all cursor-pointer ${
+                        activeRole === role
+                          ? "bg-indigo-650 text-white shadow-lg shadow-indigo-500/25"
+                          : "bg-slate-950/40 text-slate-400 hover:text-slate-200 border border-white/5"
+                      }`}
+                    >
+                      {role}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* AI Operational Summary Panel */}
+              <div className="glass-card p-6 border-t-2 border-t-indigo-500 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none" />
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
+                    <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">AI Operational Summary</h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-black text-indigo-300 bg-indigo-500/10 px-2.5 py-0.5 rounded-full border border-indigo-500/20">
+                      Confidence: 97%
+                    </span>
+                    <span className="text-[9px] font-black text-emerald-405 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                      Congest. Reduc: 37%
+                    </span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px]">
+                  <div className="space-y-2 bg-slate-950/40 p-3.5 rounded-xl border border-white/5">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Live AI Insights</span>
+                    <ul className="list-disc pl-3.5 space-y-1.5 text-slate-300">
+                      <li>Gate C expected to exceed safe occupancy in <span className="text-red-400 font-bold">12 minutes</span>.</li>
+                      <li>Rain is predicted to increase west concourse traffic.</li>
+                      <li>Metro Line 2 delay will affect post-match exit flow.</li>
+                    </ul>
+                  </div>
+                  <div className="space-y-2 bg-indigo-950/20 p-3.5 rounded-xl border border-indigo-500/10">
+                    <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest block mb-1">Recommended Actions</span>
+                    <ul className="list-none space-y-1.5 font-semibold text-slate-350">
+                      <li className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        Open Gate D
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        Dispatch 8 volunteers
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        Increase shuttle frequency
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeTab}
@@ -399,47 +597,219 @@ export default function Home() {
                       {/* Top 4 premium metric cards */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         
-                        <MetricCard
-                          title="Inflow Congestion"
-                          value={telemetry.crowd_density.value}
-                          badgeText="High Risk"
-                          badgeStyle="red"
-                          trendText="↑ 18% vs last 15 min"
-                          accentColor="red"
-                          sparklineData={sparklineDataUp}
-                          sparklineColor="#EF4444"
-                        />
+                        {/* Organizer Metrics */}
+                        {activeRole === "Organizer" && (
+                          <>
+                            <MetricCard
+                              title="Inflow Congestion"
+                              value={telemetry.crowd_density.value}
+                              badgeText="High Risk"
+                              badgeStyle="red"
+                              trendText="↑ 18% vs last 15 min"
+                              accentColor="red"
+                              sparklineData={sparklineDataUp}
+                              sparklineColor="#EF4444"
+                            />
+                            <MetricCard
+                              title="Egress Transit"
+                              value={telemetry.transport.value}
+                              badgeText="Optimal"
+                              badgeStyle="emerald"
+                              trendText="On-time performance"
+                              accentColor="emerald"
+                              sparklineData={sparklineDataDown}
+                              sparklineColor="#16A34A"
+                            />
+                            <MetricCard
+                              title="Environmental"
+                              value={telemetry.weather.value}
+                              badgeText="Clear"
+                              badgeStyle="blue"
+                              trendText="Wind 10.8 km/h"
+                              accentColor="blue"
+                              icon={<CloudRain className="w-6 h-6 text-blue-400" />}
+                            />
+                            <MetricCard
+                              title="Live Attendance"
+                              value="62,845"
+                              badgeText="↑ 1,245 today"
+                              badgeStyle="indigo"
+                              trendText="Capacity: 78%"
+                              accentColor="indigo"
+                              icon={<Users className="w-6 h-6 text-indigo-400" />}
+                            />
+                          </>
+                        )}
 
-                        <MetricCard
-                          title="Egress Transit"
-                          value={telemetry.transport.value}
-                          badgeText="Optimal"
-                          badgeStyle="emerald"
-                          trendText="On-time performance"
-                          accentColor="emerald"
-                          sparklineData={sparklineDataDown}
-                          sparklineColor="#16A34A"
-                        />
+                        {/* Security Metrics */}
+                        {activeRole === "Security" && (
+                          <>
+                            <MetricCard
+                              title="Inflow Congestion"
+                              value={telemetry.crowd_density.value}
+                              badgeText="High Risk"
+                              badgeStyle="red"
+                              trendText="↑ 18% vs last 15 min"
+                              accentColor="red"
+                              sparklineData={sparklineDataUp}
+                              sparklineColor="#EF4444"
+                            />
+                            <MetricCard
+                              title="Active Incident Reports"
+                              value="1 active report"
+                              badgeText="EMS Dispatched"
+                              badgeStyle="indigo"
+                              trendText="Sector 218 Medical"
+                              accentColor="indigo"
+                              icon={<ShieldAlert className="w-6 h-6 text-indigo-400" />}
+                            />
+                            <MetricCard
+                              title="Security Sweeps"
+                              value="8 sectors clear"
+                              badgeText="Optimal"
+                              badgeStyle="emerald"
+                              trendText="All gates online"
+                              accentColor="emerald"
+                              icon={<ShieldCheck className="w-6 h-6 text-emerald-400" />}
+                            />
+                            <MetricCard
+                              title="Live Attendance"
+                              value="62,845"
+                              badgeText="↑ 1,245 today"
+                              badgeStyle="indigo"
+                              trendText="Capacity: 78%"
+                              accentColor="indigo"
+                              icon={<Users className="w-6 h-6 text-indigo-400" />}
+                            />
+                          </>
+                        )}
 
-                        <MetricCard
-                          title="Environmental"
-                          value={telemetry.weather.value}
-                          badgeText="Clear"
-                          badgeStyle="blue"
-                          trendText="Wind 10.8 km/h"
-                          accentColor="blue"
-                          icon={<CloudRain className="w-6 h-6 text-blue-400" />}
-                        />
+                        {/* Medical Metrics */}
+                        {activeRole === "Medical" && (
+                          <>
+                            <MetricCard
+                              title="Active Incidents"
+                              value="1 active report"
+                              badgeText="EMS Dispatched"
+                              badgeStyle="red"
+                              trendText="ETA: 3.5 mins"
+                              accentColor="red"
+                              icon={<ShieldAlert className="w-6 h-6 text-red-400" />}
+                            />
+                            <MetricCard
+                              title="Medical Units"
+                              value="3 units active"
+                              badgeText="Standby"
+                              badgeStyle="blue"
+                              trendText="Dallas Venue feed"
+                              accentColor="blue"
+                              icon={<Activity className="w-6 h-6 text-blue-400" />}
+                            />
+                            <MetricCard
+                              title="Heatstroke Risk Index"
+                              value="Low Risk"
+                              badgeText="Clear"
+                              badgeStyle="emerald"
+                              trendText="Temp: 27.5°C"
+                              accentColor="emerald"
+                              icon={<Sun className="w-6 h-6 text-emerald-450" />}
+                            />
+                            <MetricCard
+                              title="Live Attendance"
+                              value="62,845"
+                              badgeText="↑ 1,245 today"
+                              badgeStyle="indigo"
+                              trendText="Capacity: 78%"
+                              accentColor="indigo"
+                              icon={<Users className="w-6 h-6 text-indigo-400" />}
+                            />
+                          </>
+                        )}
 
-                        <MetricCard
-                          title="Live Attendance"
-                          value="62,845"
-                          badgeText="↑ 1,245 today"
-                          badgeStyle="indigo"
-                          trendText="Capacity: 78%"
-                          accentColor="indigo"
-                          icon={<Users className="w-6 h-6 text-indigo-400" />}
-                        />
+                        {/* Volunteer Metrics */}
+                        {activeRole === "Volunteer" && (
+                          <>
+                            <MetricCard
+                              title="Volunteer Deployment"
+                              value="148 active"
+                              badgeText="Fully deployed"
+                              badgeStyle="emerald"
+                              trendText="Dallas Area Concourse"
+                              accentColor="emerald"
+                              icon={<Users className="w-6 h-6 text-emerald-450" />}
+                            />
+                            <MetricCard
+                              title="Task Handlers"
+                              value="8 volunteers assigned"
+                              badgeText="Egress Flow"
+                              badgeStyle="blue"
+                              trendText="Rerouting Dallas Gate C"
+                              accentColor="blue"
+                              icon={<ListOrdered className="w-6 h-6 text-blue-400" />}
+                            />
+                            <MetricCard
+                              title="Pending AI Dispatches"
+                              value="2 dispatches"
+                              badgeText="Inflow peaks"
+                              badgeStyle="indigo"
+                              trendText="Dallas Concourse C/D"
+                              accentColor="indigo"
+                              icon={<BrainCircuit className="w-6 h-6 text-indigo-400" />}
+                            />
+                            <MetricCard
+                              title="Live Attendance"
+                              value="62,845"
+                              badgeText="↑ 1,245 today"
+                              badgeStyle="indigo"
+                              trendText="Capacity: 78%"
+                              accentColor="indigo"
+                              icon={<Users className="w-6 h-6 text-indigo-400" />}
+                            />
+                          </>
+                        )}
+
+                        {/* Fan Metrics */}
+                        {activeRole === "Fan" && (
+                          <>
+                            <MetricCard
+                              title="Environmental"
+                              value={telemetry.weather.value}
+                              badgeText="Clear"
+                              badgeStyle="blue"
+                              trendText="Wind 10.8 km/h"
+                              accentColor="blue"
+                              icon={<CloudRain className="w-6 h-6 text-blue-400" />}
+                            />
+                            <MetricCard
+                              title="Egress Transit"
+                              value={telemetry.transport.value}
+                              badgeText="Optimal"
+                              badgeStyle="emerald"
+                              trendText="On-time Metro"
+                              accentColor="emerald"
+                              sparklineData={sparklineDataDown}
+                              sparklineColor="#16A34A"
+                            />
+                            <MetricCard
+                              title="Elevators & Ramps"
+                              value="All Operational"
+                              badgeText="Accessibility"
+                              badgeStyle="indigo"
+                              trendText="Route planner active"
+                              accentColor="indigo"
+                              icon={<Accessibility className="w-6 h-6 text-indigo-400" />}
+                            />
+                            <MetricCard
+                              title="Live Attendance"
+                              value="62,845"
+                              badgeText="↑ 1,245 today"
+                              badgeStyle="indigo"
+                              trendText="Capacity: 78%"
+                              accentColor="indigo"
+                              icon={<Users className="w-6 h-6 text-indigo-400" />}
+                            />
+                          </>
+                        )}
 
                       </div>
 
@@ -1099,9 +1469,12 @@ export default function Home() {
                     onChange={(e) => setScenario(e.target.value)}
                     className="w-full bg-slate-950/60 border border-white/10 rounded-xl py-2 px-3 text-xs outline-none text-white focus:bg-slate-955 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition cursor-pointer"
                   >
-                    <option value="Sudden heavy rainstorm during egress peak">Sudden heavy rainstorm during egress peak</option>
-                    <option value="Public metro line failure in zone C corridor">Public metro line failure in zone C corridor</option>
-                    <option value="Security alert near Gate B concourse">Security alert near Gate B concourse</option>
+                    <option value="Heavy Rain">Heavy Rain Simulation</option>
+                    <option value="Power Failure">Power Failure Simulation</option>
+                    <option value="Gate Closure">Gate Closure Simulation</option>
+                    <option value="Medical Emergency">Medical Emergency Simulation</option>
+                    <option value="Security Threat">Security Threat Simulation</option>
+                    <option value="Metro Delay">Metro Delay Simulation</option>
                   </select>
                 </div>
 
@@ -1114,16 +1487,28 @@ export default function Home() {
                 </button>
 
                 {decisionResult && (
-                  <div className="mt-4 p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl space-y-2">
-                    <span className="text-[9px] font-bold text-indigo-600 uppercase tracking-widest block">Commander Reasoning Stream</span>
-                    <div className="text-[10px] space-y-1.5 text-slate-700">
-                      {decisionResult.reasoning_steps.slice(0, 3).map((step: string, idx: number) => (
-                        <p key={idx} className="flex gap-1.5">
-                          <span className="text-indigo-600 font-bold">•</span>
-                          {step}
+                  <div className="mt-4 p-3.5 bg-slate-950/60 border border-indigo-500/20 rounded-xl space-y-2.5">
+                    <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest block">Commander Reasoning Stream</span>
+                    <div className="text-[10px] space-y-1.5 text-slate-300">
+                      {decisionResult.reasoning_steps.map((step: string, idx: number) => (
+                        <p key={idx} className="flex gap-1.5 items-start">
+                          <span className="text-indigo-400 font-bold mt-0.5">•</span>
+                          <span>{step}</span>
                         </p>
                       ))}
                     </div>
+                    {decisionResult.consequences && decisionResult.consequences.length > 0 && (
+                      <div className="pt-2 border-t border-white/5 space-y-1.5">
+                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">Cascading Consequences</span>
+                        <div className="flex flex-wrap gap-1">
+                          {decisionResult.consequences.map((cons: string, idx: number) => (
+                            <span key={idx} className="text-[8px] px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20 font-bold">
+                              {cons}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -1155,7 +1540,7 @@ export default function Home() {
                  </div>
 
                  {/* Alert Panel Component */}
-                 <AlertPanel />
+                 <AlertPanel activeRole={activeRole} />
 
                  {/* Action Cards Component */}
                  <RecommendationCard

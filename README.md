@@ -10,6 +10,18 @@
 
 * **Smart Stadiums & Tournament Operations**: A GenAI-enabled solution that enhances stadium operations and the overall tournament experience for fans, organizers, volunteers, and venue staff during the **FIFA World Cup 2026**.
 
+#### 📋 Challenge Requirement Mapping
+
+| Challenge Requirement | StadiumMind AI Implementation |
+| :--- | :--- |
+| **Crowd Management** | ✅ Live Gate Crowd Flow Heatmap & Congestion Predictor |
+| **Transportation** | ✅ Real-time Metro Delay Routing & Emergency EMS Dispatch Pathways |
+| **Accessibility** | ✅ AI Pathfinder Route Planner (Wheelchair & Elevator optimization) |
+| **Sustainability** | ✅ Resource Demand AI Forecaster (Power, Water, Waste loads) |
+| **Volunteers & Staff** | ✅ Voice Dispatch AI & Coordinated Tasks Assignee |
+| **Decision Support** | ✅ AI Commander (Multi-Step Scenario Simulator) |
+| **Multilingual Assistance**| ✅ Live Speech-to-Text Input Translation for International Fans |
+
 ### 2. Approach & Logic
 
 * **Compulsory Generative AI Integration**: The solution explicitly leverages Generative AI (Google Gemini 2.5 Flash via `google-genai` SDK) to improve:
