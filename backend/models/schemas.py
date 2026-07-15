@@ -80,3 +80,75 @@ class IncidentReportResponse(BaseModel):
     resources_required: List[str]
     time_estimate: str
     escalation_level: str
+
+# --- AI Operations Commander ---
+class ActionPlanRequest(BaseModel):
+    crowd_density: int
+    weather: str
+    metro_delay: int
+    attendance: int
+    volunteers: int
+    medical_units: int
+
+class ActionPlanResponse(BaseModel):
+    situation_summary: str
+    recommended_actions: List[str]
+    congestion_reduction_pct: int
+    confidence_pct: int
+
+# --- AI Match Briefing ---
+class BriefingRequest(BaseModel):
+    match_name: str = Field(default="Mexico vs Japan")
+
+class BriefingResponse(BaseModel):
+    attendance_forecast: str
+    weather: str
+    crowd_risk: str
+    traffic: str
+    volunteer_needs: str
+    emergency_readiness: str
+    key_risks: List[str]
+    suggested_actions: List[str]
+
+# --- AI Crowd Prediction Explanation ---
+class CrowdExplainRequest(BaseModel):
+    gate_id: str
+    crowd_density: int
+    metro_delay: int
+    weather: str
+
+class CrowdExplainResponse(BaseModel):
+    explanation: str
+
+# --- AI Volunteer Coordinator ---
+class VolunteerAllocationItem(BaseModel):
+    location: str
+    allocated_count: int
+    reason: str
+
+class VolunteerCoordinateRequest(BaseModel):
+    total_volunteers: int
+    locations: List[str]
+
+class VolunteerCoordinateResponse(BaseModel):
+    deployments: List[VolunteerAllocationItem]
+
+# --- AI Chat ---
+class ChatQueryRequest(BaseModel):
+    query: str
+
+class ChatQueryResponse(BaseModel):
+    reply: str
+
+# --- AI Daily Report ---
+class DailyReportRequest(BaseModel):
+    date: str = Field(default="2026-07-15")
+
+class DailyReportResponse(BaseModel):
+    executive_summary: str
+    incidents: List[str]
+    traffic: str
+    weather: str
+    recommendations: List[str]
+    resource_usage: str
+    lessons_learned: str

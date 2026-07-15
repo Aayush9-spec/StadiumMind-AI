@@ -67,4 +67,47 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ staff_raw_text: text }),
     }),
+
+  getActionPlan: (crowd: number, weather: string, delay: number, att: number, vols: number, meds: number) =>
+    def_fetch("/decision/action-plan", {
+      method: "POST",
+      body: JSON.stringify({
+        crowd_density: crowd,
+        weather: weather,
+        metro_delay: delay,
+        attendance: att,
+        volunteers: vols,
+        medical_units: meds,
+      }),
+    }),
+
+  generateBriefing: (matchName: string) =>
+    def_fetch("/briefing/generate", {
+      method: "POST",
+      body: JSON.stringify({ match_name: matchName }),
+    }),
+
+  explainCrowd: (gateId: string, crowd: number, delay: number, weather: string) =>
+    def_fetch("/crowd/explain", {
+      method: "POST",
+      body: JSON.stringify({ gate_id: gateId, crowd_density: crowd, metro_delay: delay, weather: weather }),
+    }),
+
+  coordinateVolunteers: (total: number, locs: string[]) =>
+    def_fetch("/volunteer/coordinate", {
+      method: "POST",
+      body: JSON.stringify({ total_volunteers: total, locations: locs }),
+    }),
+
+  queryChat: (query: string) =>
+    def_fetch("/chat/query", {
+      method: "POST",
+      body: JSON.stringify({ query }),
+    }),
+
+  generateDailyReport: (date: string) =>
+    def_fetch("/report/daily", {
+      method: "POST",
+      body: JSON.stringify({ date }),
+    }),
 };

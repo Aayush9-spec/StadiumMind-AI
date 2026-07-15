@@ -110,20 +110,27 @@ export default function Home() {
   const [rawIncidentText, setRawIncidentText] = useState("Fan slipped on wet stairs, minor leg cut, medic applied bandage.");
   const [incidentResult, setIncidentResult] = useState<any>(null);
 
+  // New GenAI feature states
+  const [actionPlanResult, setActionPlanResult] = useState<any>(null);
+  const [matchBriefResult, setMatchBriefResult] = useState<any>(null);
+  const [crowdExplainResult, setCrowdExplainResult] = useState<any>(null);
+  const [volunteerCoordResult, setVolunteerCoordResult] = useState<any>(null);
+  const [dailyReportResult, setDailyReportResult] = useState<any>(null);
+
   const [commanderQuery, setCommanderQuery] = useState("");
 
   const handleCommanderAsk = useCallback(async () => {
     if (!commanderQuery.trim()) return;
     setLoading(true);
     try {
-      const res = await api.askVolunteer("COMMANDER", "Command Center", commanderQuery);
+      const res = await api.queryChat(commanderQuery);
       setTimeline((prev) => [
-        { id: Date.now(), time: "Just Now", title: `Commander: ${commanderQuery}`, detail: `Result: ${res.task_description} (Zone: ${res.assigned_zone})` },
+        { id: Date.now(), time: "Just Now", title: `Commander Ask: ${commanderQuery}`, detail: `Reply: ${res.reply}` },
         ...prev
       ]);
       setCommanderQuery("");
     } catch (e) {
-      alert("Error calling AI agent. Please verify your backend server connection.");
+      alert("Error calling AI chat agent. Please verify your backend server connection.");
     } finally {
       setLoading(false);
     }
@@ -212,6 +219,81 @@ export default function Home() {
       setLoading(false);
     }
   }, [volunteerId, volunteerLoc, volunteerQuery]);
+
+  /**
+   * Generates a dynamic operational action plan with Gemini.
+   */
+  const handleGetActionPlan = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await api.getActionPlan(92, "Heavy Rain", 8, attendance, 12, 4);
+      setActionPlanResult(res);
+    } catch (e: unknown) {
+      alert((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, [attendance]);
+
+  /**
+   * Generates the Match Day Briefing using Gemini.
+   */
+  const handleGenerateBriefing = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await api.generateBriefing("Mexico vs Japan");
+      setMatchBriefResult(res);
+    } catch (e: unknown) {
+      alert((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Explains why crowd density is high at Gate C using Gemini.
+   */
+  const handleExplainCrowd = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await api.explainCrowd("Gate C", 92, 8, "Heavy Rain");
+      setCrowdExplainResult(res);
+    } catch (e: unknown) {
+      alert((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Allocates volunteer forces across sectors using Gemini.
+   */
+  const handleCoordinateVolunteers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await api.coordinateVolunteers(15, ["Gate A", "Gate C", "Medical", "Food Court"]);
+      setVolunteerCoordResult(res);
+    } catch (e: unknown) {
+      alert((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Generates executive daily reports using Gemini.
+   */
+  const handleDailyReport = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await api.generateDailyReport("2026-07-15");
+      setDailyReportResult(res);
+    } catch (e: unknown) {
+      alert((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   /**
    * Predicts energy consumption, waste loads, and water usage
@@ -499,6 +581,27 @@ export default function Home() {
           </div>
         </div>
 
+        {/* AI Executive Summary Banner */}
+        <div className="bg-slate-900/80 border-b border-indigo-500/10 py-3 px-6">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-ping" />
+              <strong className="text-white uppercase tracking-wider text-[10px]">AI Executive Summary:</strong>
+              <span className="text-slate-350">Stadium operating normally. Gate C congestion increasing. Rain arriving in 20 min. Metro Line 2 delayed.</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Recommended:</span>
+              <div className="flex gap-1.5">
+                {["Open Gate D", "Increase shuttle buses", "Dispatch volunteers"].map((rec) => (
+                  <span key={rec} className="text-[9px] px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-bold">
+                    {rec}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Central Layout Grid */}
         <div className="flex-1 w-full px-4 md:px-8 lg:px-12 py-8 flex flex-col lg:flex-row gap-8">
           
@@ -540,41 +643,42 @@ export default function Home() {
                 <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
-                    <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">AI Operational Summary</h3>
+                    <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">AI Operations Commander</h3>
                   </div>
                   <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleGetActionPlan}
+                      disabled={loading}
+                      className="px-3 py-1 bg-indigo-650 hover:bg-indigo-700 text-white rounded-lg text-[9px] font-black uppercase transition cursor-pointer"
+                    >
+                      {loading ? "Analyzing..." : "Generate AI Action Plan"}
+                    </button>
                     <span className="text-[9px] font-black text-indigo-300 bg-indigo-500/10 px-2.5 py-0.5 rounded-full border border-indigo-500/20">
-                      Confidence: 97%
+                      Confidence: {actionPlanResult ? `${actionPlanResult.confidence_pct}%` : "97%"}
                     </span>
-                    <span className="text-[9px] font-black text-emerald-405 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                      Congest. Reduc: 37%
+                    <span className="text-[9px] font-black text-emerald-450 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                      Congest. Reduc: {actionPlanResult ? `${actionPlanResult.congestion_reduction_pct}%` : "37%"}
                     </span>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px]">
                   <div className="space-y-2 bg-slate-950/40 p-3.5 rounded-xl border border-white/5">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Live AI Insights</span>
-                    <ul className="list-disc pl-3.5 space-y-1.5 text-slate-300">
-                      <li>Gate C expected to exceed safe occupancy in <span className="text-red-400 font-bold">12 minutes</span>.</li>
-                      <li>Rain is predicted to increase west concourse traffic.</li>
-                      <li>Metro Line 2 delay will affect post-match exit flow.</li>
-                    </ul>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Situation Summary</span>
+                    <p className="text-slate-300 text-[10.5px] leading-relaxed">
+                      {actionPlanResult 
+                        ? actionPlanResult.situation_summary 
+                        : "Gate C expected to exceed safe occupancy in 12 minutes due to weather-induced crowd redistribution and Metro delay."}
+                    </p>
                   </div>
                   <div className="space-y-2 bg-indigo-950/20 p-3.5 rounded-xl border border-indigo-500/10">
                     <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest block mb-1">Recommended Actions</span>
                     <ul className="list-none space-y-1.5 font-semibold text-slate-350">
-                      <li className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        Open Gate D
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        Dispatch 8 volunteers
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        Increase shuttle frequency
-                      </li>
+                      {(actionPlanResult ? actionPlanResult.recommended_actions : ["Open Gate D", "Dispatch 8 volunteers", "Increase shuttle frequency", "Delay VIP exit by 6 minutes"]).map((act: string, idx: number) => (
+                        <li key={idx} className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          {act}
+                        </li>
+                      ))}
                     </ul>
                   </div>
                 </div>
@@ -830,8 +934,103 @@ export default function Home() {
                         }}
                       />
 
-                       {/* Crowd Flow vs Forecast Chart Component */}
-                       <CrowdForecastChart data={crowdTrendData} />
+                        {/* Crowd Flow vs Forecast Chart Component */}
+                        <CrowdForecastChart data={crowdTrendData} />
+
+                        {/* AI Crowd Prediction Explanation Panel */}
+                        <div className="glass-card p-6 border border-white/5 space-y-4">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                              <TrendingUp className="w-5 h-5 text-indigo-400" />
+                              <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">AI Crowd Congestion Analyzer</h3>
+                            </div>
+                            <button
+                              onClick={handleExplainCrowd}
+                              disabled={loading}
+                              className="px-3 py-1 bg-indigo-650 hover:bg-indigo-755 text-white rounded-lg text-[9px] font-black uppercase transition cursor-pointer"
+                            >
+                              {loading ? "Analyzing..." : "Explain Inflow Congestion"}
+                            </button>
+                          </div>
+                          <div className="p-3 bg-slate-950/40 border border-white/5 rounded-xl text-xs text-slate-350 leading-relaxed">
+                            {crowdExplainResult 
+                              ? crowdExplainResult.explanation
+                              : "Click the Explain button to run a Gemini analysis of active crowd bottlenecks, transit headway parameters, and concourse density forecasts."}
+                          </div>
+                        </div>
+
+                        {/* Dual GenAI Section: Match Day Briefing & Daily PDF Report */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          
+                          {/* AI Match Day Briefing */}
+                          <div className="glass-card p-6 space-y-4">
+                            <div className="flex justify-between items-center">
+                              <h3 className="text-xs font-bold text-slate-250 uppercase tracking-wider">AI Match Day Briefing</h3>
+                              <button
+                                onClick={handleGenerateBriefing}
+                                disabled={loading}
+                                className="px-3 py-1 bg-indigo-650 hover:bg-indigo-700 text-white rounded-lg text-[9px] font-black uppercase transition cursor-pointer"
+                              >
+                                {loading ? "Generating..." : "Generate Match Brief"}
+                              </button>
+                            </div>
+                            {matchBriefResult ? (
+                              <div className="space-y-3 text-[11px] bg-slate-950/40 p-3.5 rounded-xl border border-white/5 max-h-[300px] overflow-y-auto">
+                                <div><strong>Attendance Forecast:</strong> <p className="text-slate-400 mt-0.5">{matchBriefResult.attendance_forecast}</p></div>
+                                <div><strong>Weather Outlook:</strong> <p className="text-slate-400 mt-0.5">{matchBriefResult.weather}</p></div>
+                                <div><strong>Crowd Bottleneck Risk:</strong> <p className="text-slate-400 mt-0.5">{matchBriefResult.crowd_risk}</p></div>
+                                <div><strong>Transit Schedules:</strong> <p className="text-slate-400 mt-0.5">{matchBriefResult.traffic}</p></div>
+                                <div><strong>Key Risks:</strong>
+                                  <ul className="list-disc pl-4 mt-1 text-slate-400 space-y-0.5">
+                                    {matchBriefResult.key_risks.map((r: string, i: number) => <li key={i}>{r}</li>)}
+                                  </ul>
+                                </div>
+                                <div><strong>Suggested Actions:</strong>
+                                  <ul className="list-disc pl-4 mt-1 text-slate-400 space-y-0.5">
+                                    {matchBriefResult.suggested_actions.map((a: string, i: number) => <li key={i}>{a}</li>)}
+                                  </ul>
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-xs text-slate-450 italic">No Match Brief generated. Click the button to request Gemini Match brief.</p>
+                            )}
+                          </div>
+
+                          {/* AI Daily Summary Report */}
+                          <div className="glass-card p-6 space-y-4">
+                            <div className="flex justify-between items-center">
+                              <h3 className="text-xs font-bold text-slate-250 uppercase tracking-wider">AI Daily Summary Report</h3>
+                              <button
+                                onClick={handleDailyReport}
+                                disabled={loading}
+                                className="px-3 py-1 bg-indigo-650 hover:bg-indigo-700 text-white rounded-lg text-[9px] font-black uppercase transition cursor-pointer"
+                              >
+                                {loading ? "Generating..." : "Generate Daily Report"}
+                              </button>
+                            </div>
+                            {dailyReportResult ? (
+                              <div className="space-y-3 text-[11px] bg-slate-950/40 p-3.5 rounded-xl border border-white/5 max-h-[300px] overflow-y-auto">
+                                <div><strong>Executive Summary:</strong> <p className="text-slate-400 mt-0.5">{dailyReportResult.executive_summary}</p></div>
+                                <div><strong>Weather Parameters:</strong> <p className="text-slate-400 mt-0.5">{dailyReportResult.weather}</p></div>
+                                <div><strong>Resource Logged:</strong> <p className="text-slate-400 mt-0.5">{dailyReportResult.resource_usage}</p></div>
+                                <div><strong>Lessons Learned:</strong> <p className="text-slate-450 mt-0.5 font-bold italic">{dailyReportResult.lessons_learned}</p></div>
+                                <div><strong>Recorded Incidents:</strong>
+                                  <ul className="list-disc pl-4 mt-1 text-slate-400 space-y-0.5">
+                                    {dailyReportResult.incidents.map((inc: string, i: number) => <li key={i}>{inc}</li>)}
+                                  </ul>
+                                </div>
+                                <div><strong>Operations Recommendations:</strong>
+                                  <ul className="list-disc pl-4 mt-1 text-slate-400 space-y-0.5">
+                                    {dailyReportResult.recommendations.map((rec: string, i: number) => <li key={i}>{rec}</li>)}
+                                  </ul>
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-xs text-slate-450 italic">No Daily Report generated. Click the button to request Gemini daily report summary.</p>
+                            )}
+                          </div>
+
+                        </div>
                     </div>
                   )}
 
@@ -1002,12 +1201,24 @@ export default function Home() {
                         </button>
 
                         {incidentResult && (
-                          <div className="mt-6 p-4 bg-slate-900/60 border border-white/10 rounded-xl text-xs space-y-3 text-slate-300">
-                            <p><strong>Summary:</strong> {incidentResult.summary}</p>
-                            <p><strong>Severity Rating:</strong> {incidentResult.severity}</p>
-                            <p><strong>Remediation:</strong> {incidentResult.recommended_action}</p>
-                            <p><strong>Gear Required:</strong> {incidentResult.resources_required.join(", ")}</p>
-                            <p><strong>Resolution ETA:</strong> {incidentResult.time_estimate}</p>
+                          <div className="mt-6 p-4 bg-slate-900/60 border border-white/10 rounded-xl text-xs space-y-3 text-slate-350">
+                            <span className="text-[10px] font-bold text-teal-400 uppercase tracking-widest block pb-1 border-b border-white/5">Formal Incident Record</span>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <span className="text-slate-400 block uppercase tracking-wider text-[8px] font-bold">Priority Tier</span>
+                                <strong className="text-red-400 text-sm font-bold">{incidentResult.severity === "CRITICAL" || incidentResult.severity === "HIGH" ? "HIGH" : "MEDIUM"}</strong>
+                              </div>
+                              <div>
+                                <span className="text-slate-400 block uppercase tracking-wider text-[8px] font-bold">Estimated Response Time</span>
+                                <strong className="text-slate-200 text-sm font-bold">{incidentResult.time_estimate || "2 minutes"}</strong>
+                              </div>
+                            </div>
+                            <div className="space-y-1.5 pt-2 border-t border-white/5">
+                              <p><strong>Summary:</strong> {incidentResult.summary}</p>
+                              <p><strong>Recommended Response:</strong> {incidentResult.recommended_action}</p>
+                              <p><strong>Required Gear:</strong> {incidentResult.resources_required.join(", ")}</p>
+                              <p><strong>Escalation Tier:</strong> {incidentResult.escalation_level || "LEVEL 1 (Local Staff)"}</p>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -1133,12 +1344,47 @@ export default function Home() {
                       </div>
 
                       {volunteerResult && (
-                        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs space-y-2">
+                        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs space-y-2 mt-4">
                           <p className="text-emerald-400 font-bold">Target sector allocation: {volunteerResult.assigned_zone}</p>
                           <p className="text-slate-300">Action description: {volunteerResult.task_description}</p>
                           <p className="text-slate-400">Risk category: {volunteerResult.urgency_level}</p>
                         </div>
                       )}
+
+                      {/* Bulk AI Volunteer Coordinator Force Allocation */}
+                      <div className="mt-6 pt-6 border-t border-white/5 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">AI Volunteer Coordination Planner</h3>
+                          <button
+                            onClick={handleCoordinateVolunteers}
+                            disabled={loading}
+                            className="px-3 py-1 bg-indigo-650 hover:bg-indigo-700 text-white rounded-lg text-[9px] font-black uppercase transition cursor-pointer"
+                          >
+                            {loading ? "Allocating..." : "Coordinate Volunteer Force"}
+                          </button>
+                        </div>
+                        <p className="text-xs text-slate-450">Run Gemini to coordinate a bulk volunteer force (15 agents) across: Gate A, Gate C, Medical, Food Court.</p>
+                        {volunteerCoordResult ? (
+                          <div className="space-y-2 bg-slate-950/40 p-3.5 rounded-xl border border-white/5">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Gemini Force Deployments</span>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                              {volunteerCoordResult.deployments.map((dep: any, i: number) => (
+                                <div key={i} className="p-2.5 bg-slate-900/60 border border-white/5 rounded-lg space-y-1">
+                                  <div className="flex justify-between items-center">
+                                    <strong className="text-slate-200">{dep.location}</strong>
+                                    <span className="bg-emerald-500/10 text-emerald-450 border border-emerald-500/25 px-1.5 py-0.5 rounded text-[9px] font-bold">
+                                      {dep.allocated_count} deployed
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] text-slate-400">{dep.reason}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-xs text-slate-450 italic">No coordinated deployment generated yet.</p>
+                        )}
+                      </div>
                     </div>
                   )}
 
@@ -1512,7 +1758,7 @@ export default function Home() {
                   </div>
                 )}
               </div>
-                       {/* AI Commander Panel */}
+              {/* AI Commander Panel */}
               <div className="glass-card p-6 space-y-6">
                 <div className="flex justify-between items-center pb-4 border-b border-white/10">
                   <div className="flex items-center gap-2">
@@ -1522,6 +1768,22 @@ export default function Home() {
                   <span className="text-[9px] bg-emerald-500/10 text-emerald-450 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
                     Online
                   </span>
+                </div>
+
+                {/* Operations Center Status Gauges */}
+                <div className="grid grid-cols-3 gap-2 text-center text-[9px] font-bold text-slate-400">
+                  <div className="p-2 bg-slate-950/40 border border-white/5 rounded-lg">
+                    <span className="block text-slate-500 uppercase tracking-wider text-[7px] mb-0.5">System Health</span>
+                    <span className="text-emerald-400 font-extrabold">99.8%</span>
+                  </div>
+                  <div className="p-2 bg-slate-950/40 border border-white/5 rounded-lg">
+                    <span className="block text-slate-500 uppercase tracking-wider text-[7px] mb-0.5">Live Sensors</span>
+                    <span className="text-indigo-400 font-extrabold">1,420</span>
+                  </div>
+                  <div className="p-2 bg-slate-950/40 border border-white/5 rounded-lg">
+                    <span className="block text-slate-500 uppercase tracking-wider text-[7px] mb-0.5">Avg Confidence</span>
+                    <span className="text-purple-400 font-extrabold">97.4%</span>
+                  </div>
                 </div>
 
                              {/* AI Orb Component */}
